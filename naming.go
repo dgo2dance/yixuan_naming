@@ -31,12 +31,12 @@
 package main
 
 import (
-	"github.com/herewetech/yixuan_naming/common"
-	"github.com/herewetech/yixuan_naming/dict"
-	"github.com/herewetech/yixuan_naming/list"
-	"github.com/herewetech/yixuan_naming/poetry"
-	"github.com/herewetech/yixuan_naming/texts"
-	"github.com/herewetech/yixuan_naming/unihan"
+	"yixuan_naming/common"
+	"yixuan_naming/dict"
+	"yixuan_naming/list"
+	"yixuan_naming/poetry"
+	"yixuan_naming/texts"
+	"yixuan_naming/unihan"
 )
 
 const (

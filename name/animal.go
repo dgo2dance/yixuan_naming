@@ -31,8 +31,8 @@
 package name
 
 import (
-	"github.com/herewetech/yixuan_naming/texts"
-	"github.com/herewetech/yixuan_naming/utils"
+	"yixuan_naming/texts"
+	"yixuan_naming/utils"
 )
 
 type radicalsMeaning struct {

@@ -35,9 +35,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/herewetech/yixuan_naming/list"
-	"github.com/herewetech/yixuan_naming/unihan"
-	"github.com/herewetech/yixuan_naming/utils"
+	"yixuan_naming/list"
+	"yixuan_naming/unihan"
+	"yixuan_naming/utils"
 )
 
 type nameSpec struct {

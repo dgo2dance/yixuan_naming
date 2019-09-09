@@ -35,12 +35,12 @@ import (
 	"math"
 	"strings"
 
-	"github.com/herewetech/yixuan_naming/calendar"
-	"github.com/herewetech/yixuan_naming/dict"
-	"github.com/herewetech/yixuan_naming/list"
-	"github.com/herewetech/yixuan_naming/poetry"
-	"github.com/herewetech/yixuan_naming/texts"
-	"github.com/herewetech/yixuan_naming/utils"
+	"yixuan_naming/calendar"
+	"yixuan_naming/dict"
+	"yixuan_naming/list"
+	"yixuan_naming/poetry"
+	"yixuan_naming/texts"
+	"yixuan_naming/utils"
 )
 
 /*

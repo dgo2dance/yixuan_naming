@@ -31,7 +31,7 @@
 package name
 
 import (
-	"github.com/herewetech/yixuan_naming/utils"
+	"yixuan_naming/utils"
 )
 
 type eightCharacters struct {

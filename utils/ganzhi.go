@@ -33,7 +33,7 @@ package utils
 import (
 	"fmt"
 
-	"github.com/herewetech/yixuan_naming/texts"
+	"yixuan_naming/texts"
 )
 
 // TianGan * 10

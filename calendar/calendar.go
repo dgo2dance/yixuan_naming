@@ -33,7 +33,7 @@ package calendar
 import (
 	"time"
 
-	"github.com/herewetech/yixuan_naming/utils"
+	"yixuan_naming/utils"
 )
 
 type timeSpec struct {

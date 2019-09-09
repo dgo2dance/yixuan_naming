@@ -31,7 +31,7 @@
 package name
 
 import (
-	"github.com/herewetech/yixuan_naming/texts"
+	"yixuan_naming/texts"
 )
 
 type tenGod struct {

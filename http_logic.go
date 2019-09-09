@@ -36,10 +36,10 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/herewetech/yixuan_naming/common"
-	"github.com/herewetech/yixuan_naming/name"
-	"github.com/herewetech/yixuan_naming/texts"
-	"github.com/herewetech/yixuan_naming/utils"
+	"yixuan_naming/common"
+	"yixuan_naming/name"
+	"yixuan_naming/texts"
+	"yixuan_naming/utils"
 
 	jwt "github.com/dgrijalva/jwt-go"
 

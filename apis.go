@@ -36,7 +36,7 @@ import (
 	"strconv"
 	"unicode/utf8"
 
-	"github.com/herewetech/yixuan_naming/unihan"
+	"yixuan_naming/unihan"
 
 	"github.com/valyala/fasthttp"
 )

@@ -37,8 +37,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/herewetech/yixuan_naming/list"
-	"github.com/herewetech/yixuan_naming/utils"
+	"yixuan_naming/list"
+	"yixuan_naming/utils"
 )
 
 // Indices
