@@ -36,7 +36,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"utils"
+
+	"github.com/herewetech/yixuan_naming/utils"
 )
 
 var feM map[rune]int
