@@ -1,6 +1,7 @@
 PROJECT=yixuan_naming
 PREFIX=$(shell pwd)
 VENDOR=vendor
+BIN=naming
 
 # Env
 ifndef GO
@@ -26,8 +27,8 @@ build:
 	@echo -e "\033[1;33m + Building ${PROJECT} ...\033[0m"
 	@mkdir -p ./bin
 	@echo -e "\033[1;37m   @ `$(GO) version`\033[0m"
-	@echo -e "\033[0;34m     + naming\033[0m"
-	@GO11MODULE=on CGO_ENABLED=0 GOOS=linux $(GO) build -a -ldflags '-extldflags "-static"' -o ./bin/naming
+	@echo -e "\033[0;34m     + $(BIN)\033[0m"
+	@GO11MODULE=on CGO_ENABLED=0 GOOS=linux $(GO) build -a -ldflags '-extldflags "-static"' -o ./bin/$(BIN)
 
 clean:
 	@echo
@@ -47,7 +48,7 @@ install:
 uninstall:
 	@echo
 	@echo "\033[1;33m - Uninstall ${PROJECT} ...\033[0m"
-	@rm /usr/local/bin/naming -f
+	@rm /usr/local/bin/$(BIN) -f
 	@echo
 	@echo
 
