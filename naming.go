@@ -34,6 +34,7 @@ import (
 	"yixuan_naming/common"
 	"yixuan_naming/dict"
 	"yixuan_naming/list"
+	"yixuan_naming/name"
 	"yixuan_naming/poetry"
 	"yixuan_naming/texts"
 	"yixuan_naming/unihan"
@@ -83,7 +84,15 @@ func main() {
 		g.Logger.Printf("Load %d lines from common character list to common characters L1", lines)
 	}
 
-	g.Logger.Printf("Load %d characters into common characters L2", list.CountCommonL2())
+	lines, err = list.LoadCommonL2(g.Config.GetString("Library_Path"))
+	if err != nil {
+		g.Logger.Fatal(err)
+	} else {
+		g.Logger.Printf("Load %d lines from common character list to common characters L2", lines)
+	}
+
+	lines = list.PrepareCommonCharacters()
+	g.Logger.Printf("Prepared %d characters from common character lists", lines)
 
 	// TraditionalSpecial
 	lines, err = list.LoadTraditionalSpecial(g.Config.GetString("Library_Path"))
@@ -178,6 +187,13 @@ func main() {
 		g.Logger.Fatal(err)
 	} else {
 		g.Logger.Printf("Load %d poetries, %d words", linePoetries, lineWords)
+	}
+
+	err = name.FillRankTable()
+	if err != nil {
+		g.Logger.Fatal(err)
+	} else {
+		g.Logger.Println("Rank table filled")
 	}
 
 	svc(s)

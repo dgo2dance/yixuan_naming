@@ -116,6 +116,14 @@ func getRule81(index int, language int) *rule81 {
 	return ret
 }
 
+func getRule81Rank(index int) int {
+	if index < 0 && index > 81 {
+		return 0
+	}
+
+	return rule81Ranks[index]
+}
+
 func getRuleThreeElement(index int, language int) *ruleThreeElement {
 	if index < 0 && index > 124 {
 		return nil
@@ -125,6 +133,14 @@ func getRuleThreeElement(index int, language int) *ruleThreeElement {
 	ret.Details = texts.GetMessage(texts.MessageThreeElementDescription, index, language)
 
 	return ret
+}
+
+func getRuleThreeElementRank(index int) int {
+	if index < 0 && index > 124 {
+		return 0
+	}
+
+	return ruleThreeElementRanks[index]
 }
 
 /*

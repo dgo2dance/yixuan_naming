@@ -37,7 +37,6 @@ import (
 	"regexp"
 	"strconv"
 
-	"yixuan_naming/list"
 	"yixuan_naming/utils"
 )
 
@@ -181,11 +180,6 @@ func (c *HanCharacter) appendProperty(property, value string) {
 				MappingType: property,
 				Mapping:     value,
 			}
-		}
-
-		if property == "kGB0" || property == "kGB1" || property == "kGB3" || property == "kGB5" || property == "kGB7" {
-			// Append commonL2
-			list.AppendCommonL2(c.Unicode)
 		}
 	case "kRSAdobe_Japan1_6", "kRSJapanese", "kRSKangXi", "kRSKanWa", "kRSKorean", "kRSUnicode":
 		if c.RadicalStrokeCounts == nil {

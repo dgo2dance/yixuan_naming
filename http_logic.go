@@ -247,20 +247,7 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 	}
 
 	r := ctx.UserValue("_g").(*common.GlobalRuntime)
-	r.Logger.Printf("Name kirsen from %s with family name <%v>, prefix <%v> and suffix <%v>, birth timestamp <%d>, location <%f:%f>, given name length <%d>, gender <%d>, query numbers <%d>, language <%d>",
-		ctx.RemoteIP().String(),
-		familyNameRunes,
-		prefixNameRunes,
-		suffixNameRunes,
-		birthTime,
-		latitude,
-		longitude,
-		givenNameLength,
-		gender,
-		queryNums,
-		languageCode)
-
-	condition := name.ListConditions{
+	conditions := &name.ListConditions{
 		FamilyNameRunes: familyNameRunes,
 		PrefixNameRunes: prefixNameRunes,
 		SuffixNameRunes: suffixNameRunes,
@@ -269,7 +256,21 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 		QueryNums:       queryNums,
 	}
 
-	list := name.FetchList(condition)
+	conditions.Traditionalize()
+	r.Logger.Printf("Name kirsen from %s with family name <%v>, prefix <%v> and suffix <%v>, birth timestamp <%d>, location <%f:%f>, given name length <%d>, gender <%d>, query numbers <%d>, language <%d>",
+		ctx.RemoteIP().String(),
+		conditions.FamilyNameRunes,
+		conditions.PrefixNameRunes,
+		conditions.SuffixNameRunes,
+		birthTime,
+		latitude,
+		longitude,
+		givenNameLength,
+		gender,
+		queryNums,
+		languageCode)
+
+	list, _ := name.Kirsen(conditions)
 	ctx.SetUserValue("_envelope_data", list)
 
 	return
@@ -293,6 +294,18 @@ func f(c fasthttp.RequestHandler, authorization string, s *common.HTTPServer) fa
 }
 
 func taskCommonChars(ctx *fasthttp.RequestCtx) {
+	var (
+		args  = ctx.QueryArgs()
+		level int
+	)
+
+	level = args.GetUintOrZero("level")
+	if level != 2 {
+		level = 1
+	}
+
+	name.CalcCommonStrokes(level)
+
 	return
 }
 

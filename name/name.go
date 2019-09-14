@@ -63,6 +63,7 @@ type Name struct {
 	Traditional nameDef  `json:"traditional,omitempty"`
 	PinyinTone  []string `json:"pinyin_tone"`
 	Pinyin      []string `json:"pinyin"`
+	Rank        int      `json:"rank,omitempty"`
 }
 
 // NewName : Create name from string
@@ -104,7 +105,6 @@ func (ns *nameSpec) assignUnihan() {
 		if err == nil {
 			// Strokes
 			ns.Characters = append(ns.Characters, c)
-			//ns.Strokes = append(ns.Strokes, c.QueryStrokePrefer())
 		}
 	}
 
@@ -160,17 +160,6 @@ func (ns *nameSpec) traditionalized() []*unihan.HanCharacter {
 		c, cs *unihan.HanCharacter
 		r     rune
 		ret   []*unihan.HanCharacter
-		/*
-			special = map[rune]rune{
-				20040: 20040, 20266: 20605, 20313: 20313, 20914: 20914, 21382: 26310,
-				21457: 30332, 21488: 33274, 21516: 21516, 21518: 21518, 22363: 22727,
-				22797: 24489, 23613: 23613, 24178: 24178, 24182: 20006, 24403: 30070,
-				24449: 24449, 24535: 24535, 24895: 24895, 26497: 26497, 27719: 21295,
-				30839: 30982, 31995: 31995, 32993: 32993, 33039: 33247, 33633: 30442,
-				33719: 29554, 34593: 34593, 37319: 37319, 38047: 37758, 39035: 38920,
-				40941: 37480,
-			}
-		*/
 	)
 
 	for _, c = range ns.Characters {
@@ -335,6 +324,58 @@ type ListConditions struct {
 	NeedMiddleName  bool
 	GivenNameLength int
 	QueryNums       int
+	CharacterLevel  int
+}
+
+// Traditionalize : Traditionalize conditions
+func (c *ListConditions) Traditionalize() {
+	var (
+		rt  rune
+		u   *unihan.HanCharacter
+		err error
+	)
+
+	for i, r := range c.FamilyNameRunes {
+		u, err = unihan.Query(r)
+		if err == nil {
+			rt, err = u.QueryTraditionalLazy()
+			if err == nil {
+				c.FamilyNameRunes[i] = rt
+			}
+		}
+	}
+
+	for i, r := range c.MiddleNameRunes {
+		u, err = unihan.Query(r)
+		if err == nil {
+			rt, err = u.QueryTraditionalLazy()
+			if err == nil {
+				c.MiddleNameRunes[i] = rt
+			}
+		}
+	}
+
+	for i, r := range c.PrefixNameRunes {
+		u, err = unihan.Query(r)
+		if err == nil {
+			rt, err = u.QueryTraditionalLazy()
+			if err == nil {
+				c.PrefixNameRunes[i] = rt
+			}
+		}
+	}
+
+	for i, r := range c.SuffixNameRunes {
+		u, err = unihan.Query(r)
+		if err == nil {
+			rt, err = u.QueryTraditionalLazy()
+			if err == nil {
+				c.SuffixNameRunes[i] = rt
+			}
+		}
+	}
+
+	return
 }
 
 // FetchList : Get name list by given conditions
@@ -364,36 +405,12 @@ func FetchList(c ListConditions) []*Name {
 		return ret
 	}
 
-	/*
-		multiRunes := func(source [][]rune, list []rune) [][]rune {
-			if list == nil {
-				return nil
-			}
-
-			sourceLength := 1
-			listLength := len(list)
-			if source != nil {
-				sourceLength = len(source)
-			}
-
-			ret := make([][]rune, sourceLength*listLength)
-			for i := 0; i < sourceLength; i ++ {
-				for j = 0; j < listLength; j ++ {
-					ret[i][j] =
-				}
-			}
-
-			return ret
-		}
-	*/
-
 	loopLength = c.GivenNameLength - len(c.PrefixNameRunes) - len(c.SuffixNameRunes)
 	if loopLength < 1 {
 		// Nothing to loop
 		return nil
 	}
 
-	//parts = make([]rune, loopLength)
 	charList = list.GetCommonL1()
 	listLength = len(charList)
 	descartesLength = powInt(listLength, loopLength)
