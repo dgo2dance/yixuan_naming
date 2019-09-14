@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	g = common.NewRuntime("naming")
+	g = common.NewRuntime("naming_demo")
 	s = common.NewHTTPServer(g)
 )
 
