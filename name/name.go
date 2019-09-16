@@ -315,6 +315,26 @@ func (name *Name) Normalize() {
 	}
 }
 
+// RemoveUnihan : Remove unihan defination from name
+func (name *Name) RemoveUnihan() {
+	// Original
+	name.Original.FamilyName.Characters = nil
+	name.Original.MiddleName.Characters = nil
+	name.Original.GivenName.Characters = nil
+
+	// Simplified
+	name.Simplified.FamilyName.Characters = nil
+	name.Simplified.MiddleName.Characters = nil
+	name.Simplified.GivenName.Characters = nil
+
+	// Traditional
+	name.Traditional.FamilyName.Characters = nil
+	name.Traditional.MiddleName.Characters = nil
+	name.Traditional.GivenName.Characters = nil
+
+	return
+}
+
 // ListConditions : Conditions of name list generation
 type ListConditions struct {
 	FamilyNameRunes []rune

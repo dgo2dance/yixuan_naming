@@ -355,6 +355,7 @@ func Kirsen(c *ListConditions) ([]*Name, error) {
 
 	for _, name = range ret {
 		name.Normalize()
+		name.RemoveUnihan()
 	}
 
 	return ret, nil
