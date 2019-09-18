@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-url/2.5.3/url.min.js"></script>
+
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+        integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.15.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/gijgo@1.9.13/css/gijgo.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/gijgo@1.9.13/js/gijgo.min.js"></script>
+
+    <!-- Tencent Map -->
+    <script src="https://map.qq.com/api/js?v=2.exp&key=NOABZ-BQAC4-M2GU2-XPD3R-M2OKV-S6BL5"></script>
+
+    <style>
+        .element_wood {
+            font-size: 5em;
+            color: #008800;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_fire {
+            font-size: 5em;
+            color: #880000;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_earth {
+            font-size: 5em;
+            color: #888800;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_metal {
+            font-size: 5em;
+            color: #DDDDDD;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_water {
+            font-size: 5em;
+            color: #000000;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_unknown {
+            font-size: 5em;
+            color: #000088
+        }
+    </style>
+    <script type="text/javascript">
+        var map, search_service, citylocation, marker;
+        var default_family_name = "欧阳";
+        var default_given_name = "拉面";
+        var default_birth_time = "1999-03-24 10:00";
+        var default_latitude = 45;
+        var default_longitude = 120;
+        var default_language = "s";
+        var pfamily_name, pgiven_name, pbirth_time, platitude, plongitude, planguage;
+        var self_url;
+
+        window.onload = function () {
+            function init() {
+                map = new qq.maps.Map(document.getElementById("tencent_map"), {
+                    center: new qq.maps.LatLng(39.916527, 116.397128),
+                    zoom: 12,
+                    mapStyleId: "style1"
+                });
+
+                search_service = new qq.maps.SearchService({
+                    location: "全国",
+                    complete: function (result) {
+                        console.log(result);
+                    },
+                });
+
+                citylocation = new qq.maps.CityService({
+                    complete: function (result) {
+                        map.setCenter(result.detail.latLng);
+                        $("#map_latitude").val(result.detail.latLng.lat);
+                        $("#map_longitude").val(result.detail.latLng.lng);
+                    }
+                });
+
+                marker = new qq.maps.Marker({
+                    map: null,
+                });
+
+                qq.maps.event.addListener(map, "click", function (e) {
+                    marker.setPosition(e.latLng);
+                    marker.setMap(map);
+                    $("#map_latitude").val(e.latLng.lat);
+                    $("#map_longitude").val(e.latLng.lng);
+                });
+            }
+
+            init();
+            citylocation.searchLocalCity();
+            //$("#birth_time").val(default_birth_time);
+
+            // Read parameters
+            pfamily_name = $.url("?family_name")
+            pgiven_name = $.url("?given_name")
+            pbirth_time = $.url("?birth_time")
+            platitude = $.url("?latitude")
+            plongitude = $.url("?longitude")
+            planguage = $.url("?language")
+
+            if (pfamily_name) {
+                $("#family_name").val(pfamily_name);
+            }
+            if (pgiven_name) {
+                $("#given_name").val(pgiven_name);
+            }
+            if (pbirth_time) {
+                $("#birth_timestamp").val(pbirth_time);
+                d = new Date(pbirth_time * 1000);
+                $("#birth_time").val(d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() +
+                    " " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds());
+            }
+            if (platitude) {
+                $("#map_latitude").val(platitude);
+            }
+            if (plongitude) {
+                $("#map_longitude").val(plongitude)
+            }
+            if (planguage) {
+                $("#language").val(planguage)
+            }
+
+            if (pfamily_name && pgiven_name && pbirth_time && platitude && plongitude) {
+                get_rank();
+            }
+        }
+
+        function search_map() {
+            marker.setMap(null);
+            var keyword = $("#map_search_keyword").val();
+            search_service.search(keyword);
+        }
+
+        function get_rank() {
+            var family_name = $("#family_name").val();
+            var given_name = $("#given_name").val();
+            var birth_time = $("#birth_time").val();
+            var birth_timestamp = $("#birth_timestamp").val();
+            var locale_offset = $("#locale_offset").val();
+            var longitude = $("#map_longitude").val();
+            var latitude = $("#map_latitude").val();
+            var language = $("#language").val();
+
+            if (family_name == "") {
+                family_name = default_family_name;
+                $("#family_name").val(default_family_name);
+            }
+
+            if (given_name == "") {
+                given_name = default_given_name;
+                $("#given_name").val(default_given_name);
+            }
+
+            if (birth_time == "") {
+                birth_timestamp = (new Date(default_birth_time).getTime()) / 1000;
+                $("#birth_time").val(default_birth_time);
+            }
+
+            if (locale_offset == "") {
+                var b = new Date(2000, 0, 1);
+                locale_offset = 0 - b.getTimezoneOffset() * 60;
+                $("#locale_offset").val(0 - (b.getTimezoneOffset()) * 60);
+            }
+
+            if (longitude == "") {
+                longitude = default_longitude;
+                $("#longitude").val(default_longitude);
+            }
+
+            if (latitude == "") {
+                latitude = default_latitude;
+                $("#latitude").val(default_latitude);
+            }
+
+            if (language == "") {
+                language = default_language;
+                $("#language").val(default_language);
+            }
+
+            var d = new Date($("#birth_time").val());
+            var t = d.getTime() / 1000;
+            var o = d.getTimezoneOffset();
+            var rt = t - o * 60;
+            var b = new Date(2000, 0, 1);
+            var time_type = "标准";
+            if (b.getTimezoneOffset() != o) {
+                time_type = "夏令时";
+            }
+
+            $("#birth_timestamp").val(t);
+            $("#locale_offset").val(0 - (o * 60));
+            $("#birth_time_type").text(time_type);
+
+            var url;
+            if ("file:" == location.protocol) {
+                url = "http://localhost:7788/name/rank?family=" + family_name + "&given=" + given_name + "&birth=" +
+                    birth_timestamp + "&longitude=" + longitude + "&latitude=" + latitude + "&lang=" + language;
+            } else {
+                url = "https://demo.naming.weiapi.net/name/rank?family=" + family_name + "&given=" + given_name + "&birth=" +
+                    birth_timestamp + "&longitude=" + longitude + "&latitude=" + latitude + "&lang=" + language;
+            }
+
+            parts = location.href.split("rank.html", 1);
+            self_url = parts[0] + "rank.html";
+            self_url = self_url + "?family_name=" + family_name +
+                "&given_name=" + given_name +
+                "&birth_time=" + birth_timestamp +
+                "&latitude=" + latitude +
+                "&longitude=" + longitude;
+
+            $.ajax({
+                url: url,
+                type: "GET",
+                dataType: "json",
+            }).done(function (data) {
+                if (data.code == 0) {
+                    // Success
+                    render(data.data)
+                }
+            });
+        }
+
+        function render(data) {
+            console.log(data);
+            var five_elements = ["木", "火", "土", "金", "水"];
+            var solarterms_aliases = [
+                "小寒", "大寒", "立春", "雨水", "惊蛰", "春分",
+                "清明", "谷雨", "立夏", "小满", "芒种", "夏至",
+                "小暑", "大暑", "立秋", "处暑", "白露", "秋分",
+                "寒露", "霜降", "立冬", "小雪", "大雪", "冬至",
+            ];
+
+            if (data.illegal == true) {
+                alert("这个名字不可以查哦");
+                return;
+            }
+
+            document.title = "姓名测算 - " + data.name.traditional.full_name;
+
+            nf = ""
+            for (i = 0; i < data.name.traditional.family_name.characters.length; i++) {
+                var sty
+                switch (data.name.traditional.family_name.five_elements[i]) {
+                    case 0:
+                        sty = "element_wood";
+                        break;
+                    case 1:
+                        sty = "element_fire";
+                        break;
+                    case 2:
+                        sty = "element_earth";
+                        break;
+                    case 3:
+                        sty = "element_metal";
+                        break;
+                    case 4:
+                        sty = "element_water";
+                        break;
+                    default:
+                        sty = "element_unknown";
+                        break;
+                }
+
+                nf += "<label class=\"" + sty + "\">" + data.name.traditional.family_name.characters[i].utf8_str +
+                    "</label>";
+            }
+
+            $("#render_family_name").html(nf);
+
+            gf = ""
+            for (i = 0; i < data.name.traditional.given_name.characters.length; i++) {
+                var sty
+                switch (data.name.traditional.given_name.five_elements[i]) {
+                    case 0:
+                        sty = "element_wood";
+                        break;
+                    case 1:
+                        sty = "element_fire";
+                        break;
+                    case 2:
+                        sty = "element_earth";
+                        break;
+                    case 3:
+                        sty = "element_metal";
+                        break;
+                    case 4:
+                        sty = "element_water";
+                        break;
+                    default:
+                        sty = "element_unknown";
+                        break;
+                }
+
+                gf += "<label class=\"" + sty + "\">" + data.name.traditional.given_name.characters[i].utf8_str +
+                    "</label>";
+            }
+
+            $("#render_given_name").html(gf);
+            $("#render_family_name_stroke").text("笔画：" + data.name.traditional.family_name.strokes.join(" | "));
+            $("#render_given_name_stroke").text("笔画：" + data.name.traditional.given_name.strokes.join(" | "));
+            $("#render_family_name_unicode").text("Unicode：" + data.name.traditional.family_name.runes.join(" | "));
+            $("#render_given_name_unicode").text("Unicode：" + data.name.traditional.given_name.runes.join(" | "));
+
+            fef = [];
+            for (i = 0; i < data.name.traditional.family_name.five_elements.length; i++) {
+                fef[i] = five_elements[data.name.traditional.family_name.five_elements[i]];
+            }
+
+            $("#render_family_name_five_elements").text("五行：" + fef.join(" | "));
+
+            feg = [];
+            for (i = 0; i < data.name.traditional.given_name.five_elements.length; i++) {
+                feg[i] = five_elements[data.name.traditional.given_name.five_elements[i]];
+            }
+
+            $("#render_given_name_five_elements").text("五行：" + feg.join(" | "));
+
+            if (!data.homonyms) {
+                data.homonyms = [];
+            }
+
+            if (data.bai_jia_xing) {
+                $("#render_bai_jia_xing").text("百家姓 第 " + data.bai_jia_xing.sort +
+                    " 位，郡望：[" + data.bai_jia_xing.place + "]");
+            }
+
+            if (data.common_name) {
+                $("#render_name_is_common").text("该名字 为 常用名");
+            } else {
+                $("#render_name_is_common").text("该名字 非 常用名");
+            }
+
+            $("#render_name_original").text(data.name.original.full_name);
+            $("#render_name_simplified").text(data.name.simplified.full_name);
+            $("#render_name_traditional").text(data.name.traditional.full_name);
+            $("#render_name_pinyin_tone").text(data.name.pinyin_tone.join(" | "));
+            $("#render_name_pinyin").text(data.name.pinyin.join(" | "));
+            $("#render_name_homonyms").text(data.homonyms.join(" | "));
+
+            $("#render_five_rules_tian").html(data.five_rules.tian_ge + " - " + data
+                .five_rules.tian_ge_five_element + " / " + data.five_rules.tian_ge_five_element_description +
+                "<br />" +
+                data.five_rules.tian_ge_god.alias + " [" + data.five_rules.tian_ge_god.representative + "] " +
+                data.five_rules.tian_ge_god.description + "<br />" + data.five_rules.tian_ge_god.soul + "<br /> [" +
+                data.five_rules
+                .tian_ge_rule.summary + "] " + data.five_rules.tian_ge_rule.details + " / " + data.five_rules
+                .tian_ge_rank);
+            $("#render_five_rules_ren").html(data.five_rules.ren_ge + " - " + data
+                .five_rules.ren_ge_five_element + " / " + data.five_rules.ren_ge_five_element_description +
+                "<br /> [" +
+                data.five_rules
+                .ren_ge_rule.summary + "] " + data.five_rules.ren_ge_rule.details + " / " + data.five_rules
+                .ren_ge_rank);
+            $("#render_five_rules_di").html(data.five_rules.di_ge + " - " + data
+                .five_rules.di_ge_five_element + " / " + data.five_rules.di_ge_five_element_description +
+                "<br />" +
+                data.five_rules.di_ge_god.alias + " [" + data.five_rules.di_ge_god.representative + "] " +
+                data.five_rules.di_ge_god.description + "<br />" + data.five_rules.di_ge_god.soul + "<br /> [" +
+                data.five_rules
+                .di_ge_rule.summary + "] " + data.five_rules.di_ge_rule.details + " / " + data.five_rules
+                .di_ge_rank);
+            $("#render_five_rules_zong").html(data.five_rules.zong_ge + " - " + data
+                .five_rules.zong_ge_five_element + " / " + data.five_rules.zong_ge_five_element_description +
+                "<br />" +
+                data.five_rules.zong_ge_god.alias + " [" + data.five_rules.zong_ge_god.representative + "] " +
+                data.five_rules.zong_ge_god.description + "<br />" + data.five_rules.zong_ge_god.soul + "<br /> [" +
+                data.five_rules
+                .zong_ge_rule.summary + "] " + data.five_rules.zong_ge_rule.details + " / " + data.five_rules
+                .zong_ge_rank);
+            $("#render_five_rules_wai").html(data.five_rules.wai_ge + " - " + data
+                .five_rules.wai_ge_five_element + " / " + data.five_rules.wai_ge_five_element_description +
+                "<br />" +
+                data.five_rules.wai_ge_god.alias + " [" + data.five_rules.wai_ge_god.representative + "] " +
+                data.five_rules.wai_ge_god.description + "<br />" + data.five_rules.wai_ge_god.soul + "<br /> [" +
+                data.five_rules
+                .wai_ge_rule.summary + "] " + data.five_rules.wai_ge_rule.details + " / " + data.five_rules
+                .wai_ge_rank);
+            $("#render_five_rules_three_element").text(data.five_rules.three_element.details + " / " + data.five_rules
+                .three_element_rank);
+
+            $("#render_birth_time_general").text(
+                data.calendar.general_time.year + "年" +
+                data.calendar.general_time.month + "月" +
+                data.calendar.general_time.day + "日 " +
+                data.calendar.general_time.hour + "时" +
+                data.calendar.general_time.minute + "分" +
+                data.calendar.general_time.second + "秒"
+            );
+
+            $("#render_birth_time_utc").text(
+                data.calendar.utc_time.year + "年" +
+                data.calendar.utc_time.month + "月" +
+                data.calendar.utc_time.day + "日 " +
+                data.calendar.utc_time.hour + "时" +
+                data.calendar.utc_time.minute + "分" +
+                data.calendar.utc_time.second + "秒"
+            );
+
+            $("#render_birth_time_china").text(
+                data.calendar.china_time.year + "年" +
+                data.calendar.china_time.month + "月" +
+                data.calendar.china_time.day + "日 " +
+                data.calendar.china_time.hour + "时" +
+                data.calendar.china_time.minute + "分" +
+                data.calendar.china_time.second + "秒"
+            );
+
+            $("#render_birth_time_local").text(
+                data.calendar.local_time.year + "年" +
+                data.calendar.local_time.month + "月" +
+                data.calendar.local_time.day + "日 " +
+                data.calendar.local_time.hour + "时" +
+                data.calendar.local_time.minute + "分" +
+                data.calendar.local_time.second + "秒"
+            );
+
+            $("#render_birth_time_real").text(
+                data.calendar.real_time.year + "年" +
+                data.calendar.real_time.month + "月" +
+                data.calendar.real_time.day + "日 " +
+                data.calendar.real_time.hour + "时" +
+                data.calendar.real_time.minute + "分" +
+                data.calendar.real_time.second + "秒"
+            );
+
+            var solarterms = "";
+            for (i = 0; i < solarterms_aliases.length; i++) {
+                solarterms += solarterms_aliases[i] + "：" + data.calendar.solar.solarterms[i] + "<br />";
+            }
+
+            $("#render_calendar_solarterms").html(solarterms);
+
+            $("#render_calendar_lunar").text(
+                data.calendar.lunar.animal_sign_alias + "年 " +
+                (data.calendar.lunar.leap_month ? "闰 " : "") +
+                data.calendar.lunar.month_alias + "月 " +
+                data.calendar.lunar.day_alias + " 当年共 " +
+                data.calendar.lunar.year_months + " 月 当年共 " +
+                data.calendar.lunar.year_days + " 天"
+            );
+
+            $("#render_calendar_ganzhi").text(
+                data.calendar.ganzhi.year_alias + "年 " +
+                data.calendar.ganzhi.month_alias + "月 " +
+                data.calendar.ganzhi.day_alias + "日 " +
+                data.calendar.ganzhi.hour_alias + "时"
+            );
+
+            $("#render_ganzhi_five_elements").text(
+                "木" + data.ganzhi_five_elements.five_elements.wood +
+                " 火" + data.ganzhi_five_elements.five_elements.fire +
+                " 土" + data.ganzhi_five_elements.five_elements.earth +
+                " 金" + data.ganzhi_five_elements.five_elements.metal +
+                " 水" + data.ganzhi_five_elements.five_elements.water
+            );
+
+            $("#render_ganzhi_five_elements_zhi").text(
+                "木" + data.ganzhi_five_elements.five_elements_zhi.wood +
+                " 火" + data.ganzhi_five_elements.five_elements_zhi.fire +
+                " 土" + data.ganzhi_five_elements.five_elements_zhi.earth +
+                " 金" + data.ganzhi_five_elements.five_elements_zhi.metal +
+                " 水" + data.ganzhi_five_elements.five_elements_zhi.water
+            );
+
+            $("#render_ganzhi_five_elements_total").text(
+                "木" + data.ganzhi_five_elements.five_elements_total.wood +
+                " 火" + data.ganzhi_five_elements.five_elements_total.fire +
+                " 土" + data.ganzhi_five_elements.five_elements_total.earth +
+                " 金" + data.ganzhi_five_elements.five_elements_total.metal +
+                " 水" + data.ganzhi_five_elements.five_elements_total.water
+            );
+
+            $("#render_sound_year").text(
+                "[" + data.sound_five_elements.year_sound.name + "] - " + data.sound_five_elements.year_sound
+                .description
+            );
+
+            $("#render_sound_month").text(
+                "[" + data.sound_five_elements.month_sound.name + "] - " + data.sound_five_elements.month_sound
+                .description
+            );
+
+            $("#render_sound_day").text(
+                "[" + data.sound_five_elements.day_sound.name + "] - " + data.sound_five_elements.day_sound
+                .description
+            );
+
+            $("#render_sound_hour").text(
+                "[" + data.sound_five_elements.hour_sound.name + "] - " + data.sound_five_elements.hour_sound
+                .description
+            );
+
+            $("#render_body_stretch_detail").text(
+                data.eight_characters.ling +
+                ((data.eight_characters.ling >= 50) ? "（得） / " : "（失） / ") +
+                data.eight_characters.shi +
+                ((data.eight_characters.shi >= 10) ? "（得） / " : "（失） / ") +
+                (data.eight_characters.di ? "（得）" : "（失）")
+            );
+
+            $("#render_body_stretch_yi_detail").text(
+                data.eight_characters.ling +
+                ((data.eight_characters.ling >= 50) ? "（得） / " : "（失） / ") +
+                data.eight_characters.shi_yi +
+                ((data.eight_characters.shi_yi >= 10) ? "（得）" : "（失）")
+            );
+
+            $("#render_body_stretch_description").text(
+                "八字身偏[" +
+                (data.eight_characters.stretch ? "强" : "弱") + "]，属[" +
+                five_elements[data.eight_characters.self] + "]，喜[" +
+                five_elements[data.eight_characters.like] + "]。"
+            );
+
+            $("#render_body_stretch_yi_description").text(
+                "八字身偏[" +
+                (data.eight_characters.stretch_yi ? "强" : "弱") + "]，属[" +
+                five_elements[data.eight_characters.self] + "]，喜[" +
+                five_elements[data.eight_characters.like_yi] + "]。"
+            );
+
+            $("#render_animal_years").text(
+                data.animal.years
+            );
+
+            var lucky = "";
+            for (i = 0; i < data.animal.radicals.lucky.length; i++) {
+                var lr = "";
+                for (j = 0; j < data.animal.radicals.lucky[i].radicals.length; j++) {
+                    lr += "[" + data.animal.radicals.lucky[i].radicals[j].str + "]";
+                }
+                lucky += lr + " - " +
+                    data.animal.radicals.lucky[i].meaning + "<br />"
+            }
+            $("#render_animal_radicals_lucky").html(lucky);
+
+            var ominous = "";
+            for (i = 0; i < data.animal.radicals.ominous.length; i++) {
+                var or = "";
+                for (j = 0; j < data.animal.radicals.ominous[i].radicals.length; j++) {
+                    or += "[" + data.animal.radicals.ominous[i].radicals[j].str + "]";
+                }
+                ominous += or + " - " +
+                    data.animal.radicals.ominous[i].meaning + "<br />"
+            }
+            $("#render_animal_radicals_ominous").html(ominous);
+
+            $("#render_poetries").empty();
+            $("#render_poetries_unusual").empty();
+
+            if (data.poetries) {
+                data.poetries.forEach(function (e) {
+                    switch (e.type) {
+                        case 0:
+                            t = "诗经";
+                            display = true;
+                            break;
+                        case 1:
+                            t = "楚辞";
+                            display = true;
+                            break;
+                        case 2:
+                            t = "四书";
+                            display = true;
+                            break;
+                        case 3:
+                            t = "周易";
+                            display = true;
+                            break;
+                        case 4:
+                            t = "花间集";
+                            display = true;
+                            break;
+                        case 5:
+                            t = "南唐后主词";
+                            display = true;
+                            break;
+                        case 6:
+                            t = "唐诗";
+                            display = false;
+                            break;
+                        case 7:
+                            t = "宋诗";
+                            display = false;
+                            break;
+                        case 8:
+                            t = "宋词";
+                            display = false;
+                            break;
+                        default:
+                            t = "未知";
+                            display = false;
+                    }
+
+                    if (display) {
+                        $("#render_poetries").append("<tr><td class=\"table\">" +
+                            "[" + t + "] - " +
+                            e.author + "《" + e.title + "》<br />" +
+                            e.paragraphs.replace(/\|/g, "<br />").replace(data.name.simplified.given_name
+                                .string,
+                                "<font color=\"red\">" + data.name.simplified.given_name.string + "</font>"
+                            ) +
+                            "</td></tr>");
+                    } else {
+                        $("#render_poetries_unusual").append("<tr><td class=\"table\">" +
+                            "[" + t + "] - " +
+                            e.author + "《" + e.title + "》<br />" +
+                            e.paragraphs.replace(/\|/g, "<br />").replace(data.name.simplified.given_name
+                                .string,
+                                "<font color=\"red\">" + data.name.simplified.given_name.string + "</font>"
+                            ) +
+                            "</td></tr>");
+                    }
+                });
+            }
+
+            var name_explanation = "";
+            data.dict_xinhua.family_name_xinhua.forEach(function (e) {
+                name_explanation += "<tr><td class=\"table-dark\" width=\"150px\">";
+                name_explanation += e.utf8_str;
+                name_explanation += "</td><td>";
+                name_explanation += "<table class=\"table table-borderless\"><tbody>";
+                name_explanation += "<tr><td>" + e.pinyin + "</td></tr>";
+                name_explanation += "<tr><td>" + e.explanation.join("<br />") + "</td></tr>";
+                //name_explanation += "<tr><td>" + e.more.join("<br />") + "</td></tr>";
+                name_explanation += "</tbody></table></td></tr>";
+            });
+            data.dict_xinhua.given_name_xinhua.forEach(function (e) {
+                name_explanation += "<tr><td class=\"table-dark\" width=\"150px\">";
+                name_explanation += e.utf8_str;
+                name_explanation += "</td><td>";
+                name_explanation += "<table class=\"table table-borderless\"><tbody>";
+                name_explanation += "<tr><td>" + e.pinyin + "</td></tr>";
+                name_explanation += "<tr><td>" + e.explanation.join("<br />") + "</td></tr>";
+                //name_explanation += "<tr><td>" + e.more.join("<br />") + "</td></tr>";
+                name_explanation += "</tbody></table></td></tr>";
+            });
+
+            $("#render_name_explanation").html(name_explanation);
+
+            var name_folkways = "";
+            data.dict_folkways.family_name_folkway.forEach(function (e) {
+                if (e) {
+                    name_folkways += "<tr><td class=\"table-dark\" width=\"150px\">";
+                    name_folkways += e.utf8_str;
+                    name_folkways += "</td><td>";
+                    name_folkways += e.explanation;
+                    name_folkways += "</td></tr>";
+                }
+            });
+
+            data.dict_folkways.given_name_folkway.forEach(function (e) {
+                if (e) {
+                    name_folkways += "<tr><td class=\"table-dark\" width=\"150px\">";
+                    name_folkways += e.utf8_str;
+                    name_folkways += "</td><td>";
+                    name_folkways += e.explanation;
+                    name_folkways += "</td></tr>";
+                }
+            });
+
+            $("#render_name_folkways").html(name_folkways);
+
+            $("#render_name_score").html(
+                "<h1>姓名三才五格得分：" + data.rank.rank_five_rules + "</h1>"
+            );
+
+            $("#render_name_detail").html(
+                "<h3>点评：未上线</h3>"
+            );
+
+            $("#render_share_link").val(self_url);
+
+            return;
+        }
+
+        function copy_share() {
+            copy_text = document.getElementById("render_share_link");
+            copy_text.select();
+            document.execCommand("copy");
+            alert("分享链接已复制：" + copy_text.value);
+        }
+    </script>
+
+    <title>姓名测算</title>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col p-3 text-center font-weight-bolder">
+                <h1>姓名测算</h1>
+            </div>
+        </div>
+        <input type="hidden" id="language">
+        <div class="row justify-content-center">
+            <div class="col col-sm-3 p-3 form-group">
+                <label for="family_name">姓（支持复姓）</label>
+                <input type="text" class="form-control" id="family_name" placeholder="姓">
+            </div>
+            <div class="col col-sm-3 p-3 form-group">
+                <label for="given_name">名（最多两个字有效）</label>
+                <input type="text" class="form-control" id="given_name" placeholder="名">
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-6 p-3">
+                <div class="form-group">
+                    <label for="birth_time">选择出生时间</label>
+                    <span id="birth_time_type"></span>
+                    <input type="input" class="form-control" id="birth_time">
+                    <input type="hidden" id="birth_timestamp">
+                    <input type="hidden" id="locale_offset">
+                </div>
+            </div>
+            <script type="text/javascript">
+                /*
+                $(function () {
+                    $('#birth_time').datetimepicker({
+                        uiLibrary: "bootstrap4",
+                        modal: true,
+                        footer: true,
+                        format: "yyyy-mm-dd HH:MM",
+                        change: function (e) {
+                            var d = new Date($("#birth_time").val());
+                            var t = d.getTime() / 1000;
+                            var o = d.getTimezoneOffset();
+                            var rt = t - o * 60;
+                            var b = new Date(2000, 0, 1);
+                            var time_type = "标准";
+                            if (b.getTimezoneOffset() != o) {
+                                time_type = "夏令时";
+                            }
+
+                            $("#birth_timestamp").val(t);
+                            $("#locale_offset").val(0 - (o * 60));
+                            $("#birth_time_type").text(time_type);
+                        }
+                    })
+                });
+            */
+            </script>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8 p-3 form-group">
+                <label for="tencent_map">定位出生地</label>
+                <div id="tencent_map" style="height:500px"></div>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8 p-3 form-group">
+                <!--
+                <div class="row">
+                    <label for="map_search_keyword">搜索位置</label>
+                    <input type="text" class="form-control" id="map_search_keyword">
+                </div>
+                <div class="row">
+                    <div class="col p-3 text-center">
+                        <button type="button" class="btn btn-info" onclick="search_map()">搜索</button>
+                    </div>
+                </div>
+                -->
+                <Mdiv class="row">
+                    <div class="col p-3">
+                        <input type="text" class="form-control" id="map_latitude" placeholder="纬度" disabled>
+                    </div>
+                </Mdiv>
+                <Mdiv class="row">
+                    <div class="col p-3">
+                        <input type="text" class="form-control" id="map_longitude" placeholder="经度" disabled>
+                    </div>
+                </Mdiv>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col p-3 text-center">
+                <button type="button" class="btn btn-primary" onclick="get_rank();">测算</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col p-3 text-center font-weight-bolder" id="render_family_name"></div>
+            <div class="col p-3 text-center font-weight-bolder" id="render_given_name"></div>
+        </div>
+        <div class="row">
+            <div class="col p-3 text-center" id="render_family_name_stroke"></div>
+            <div class="col p-3 text-center" id="render_given_name_stroke"></div>
+        </div>
+        <div class="row">
+            <div class="col p-3 text-center" id="render_family_name_unicode"></div>
+            <div class="col p-3 text-center" id="render_given_name_unicode"></div>
+        </div>
+        <div class="row">
+            <div class="col p-3 text-center" id="render_family_name_five_elements"></div>
+            <div class="col p-3 text-center" id="render_given_name_five_elements"></div>
+        </div>
+        <div class="row">
+            <div class="col p-3 text-center" id="render_bai_jia_xing"></div>
+            <div class="col p-3 text-center" id="render_name_is_common"></div>
+        </div>
+        <div class="row">
+            <div class="col p-3 text-center" id="render_name_score"></div>
+        </div>
+        <div class="row">
+            <div class="col p-3 text-center" id="render_name_detail"></div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8 p-3 text-center">
+                <input type="input" class="form-control" id="render_share_link">
+                <button type="button" class="btn btn-info" onclick="copy_share();">复制分享地址</button>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>名字</label>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td class="table-dark" width="150px">输入</td>
+                            <td id="render_name_original"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">简体</td>
+                            <td id="render_name_simplified"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">繁体</td>
+                            <td id="render_name_traditional"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">拼音（音标）</td>
+                            <td id="render_name_pinyin_tone"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">拼音</td>
+                            <td id="render_name_pinyin"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">包含同音词</td>
+                            <td id="render_name_homonyms"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>姓名五格</label>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td class="table-dark" width="150px">天格</td>
+                            <td id="render_five_rules_tian"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">人格</td>
+                            <td id="render_five_rules_ren"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">地格</td>
+                            <td id="render_five_rules_di"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">总格</td>
+                            <td id="render_five_rules_zong"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">外格</td>
+                            <td id="render_five_rules_wai"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">三才</td>
+                            <td id="render_five_rules_three_element"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>出生时间</label>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td class="table-dark" width="150px">输入出生时间</td>
+                            <td id="render_birth_time_general"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">UTC标准时间</td>
+                            <td id="render_birth_time_utc"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">中国标准时间</td>
+                            <td id="render_birth_time_china"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">平太阳时</td>
+                            <td id="render_birth_time_local"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">真太阳时</td>
+                            <td id="render_birth_time_real"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>日历</label>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td class="table-dark" width="150px">节气</td>
+                            <td id="render_calendar_solarterms"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">农历</td>
+                            <td id="render_calendar_lunar"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">干支历（八字）</td>
+                            <td id="render_calendar_ganzhi"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>八字五行</label>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td class="table-dark" width=150px">干支五行</td>
+                            <td id="render_ganzhi_five_elements"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">支藏五行</td>
+                            <td id="render_ganzhi_five_elements_zhi"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">五行总数</td>
+                            <td id="render_ganzhi_five_elements_total"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">年柱纳音</td>
+                            <td id="render_sound_year"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">月柱纳音</td>
+                            <td id="render_sound_month"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">日柱纳音</td>
+                            <td id="render_sound_day"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">时柱纳音</td>
+                            <td id="render_sound_hour"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>八字身强</label>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td class="table-dark" width="150px">令 / 势 / 地</td>
+                            <td id="render_body_stretch_detail"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark" width="150px">令 / 势（易玄）</td>
+                            <td id="render_body_stretch_yi_detail"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">身</td>
+                            <td id="render_body_stretch_description"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">身（易玄）</td>
+                            <td id="render_body_stretch_yi_description"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>生肖</label>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td class="table-dark" width="150px">运势</td>
+                            <td id="render_animal_years"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">适合部首</td>
+                            <td id="render_animal_radicals_lucky"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-dark">不适部首</td>
+                            <td id="render_animal_radicals_ominous"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>诗词出处</label>
+                <table class="table">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>四书五经、楚辞、花间集、南唐后主</th>
+                        </tr>
+                    </thead>
+                    <tbody id="render_poetries">
+                    </tbody>
+                </table>
+                <table class="table">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>唐宋诗词</th>
+                        </tr>
+                    </thead>
+                    <tbody id="render_poetries_unusual">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>新华字典解释</label>
+                <table class="table">
+                    <tbody id="render_name_explanation">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8">
+                <label>民俗字典解释</label>
+                <table class="table">
+                    <tbody id="render_name_folkways">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

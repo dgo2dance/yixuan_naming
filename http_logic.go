@@ -156,7 +156,7 @@ func nameRank(ctx *fasthttp.RequestCtx) {
 		languageCode)
 	n := name.NewNameRunes(familyNameRunes, middleNameRunes, givenNameRunes)
 	n.Normalize()
-	ret := name.Rank(languageCode, n, birthTime, utils.Location{Latitude: latitude, Longitude: longitude})
+	ret, _ := name.Rank(languageCode, n, birthTime, utils.Location{Latitude: latitude, Longitude: longitude})
 
 	ctx.SetUserValue("_envelope_data", ret)
 
@@ -178,6 +178,7 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 		givenNameLength int
 		gender          int
 		queryNums       int
+		characterLevel  int
 		language        []byte
 		languageCode    int
 	)
@@ -240,6 +241,7 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 	queryNums = args.GetUintOrZero("nums")
 	language = args.Peek("lang")
 	languageCode = texts.AssertLanguage(string(language))
+	characterLevel = args.GetUintOrZero("character_level")
 
 	if 0 == longitude && 0 == latitude {
 		longitude = 120.0
@@ -247,13 +249,16 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 	}
 
 	r := ctx.UserValue("_g").(*common.GlobalRuntime)
-	conditions := &name.ListConditions{
+	conditions := &name.KirsenConditions{
 		FamilyNameRunes: familyNameRunes,
 		PrefixNameRunes: prefixNameRunes,
 		SuffixNameRunes: suffixNameRunes,
+		Gender:          gender,
 		NeedMiddleName:  false,
+		NeedBirthTime:   false,
 		GivenNameLength: givenNameLength,
 		QueryNums:       queryNums,
+		CharacterLevel:  characterLevel,
 	}
 
 	conditions.Traditionalize()
@@ -270,8 +275,8 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 		queryNums,
 		languageCode)
 
-	list, _ := name.Kirsen(conditions)
-	ctx.SetUserValue("_envelope_data", list)
+	ret, _ := name.Kirsen(languageCode, conditions, birthTime, utils.Location{Latitude: latitude, Longitude: longitude})
+	ctx.SetUserValue("_envelope_data", ret)
 
 	return
 }

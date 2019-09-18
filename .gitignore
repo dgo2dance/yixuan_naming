@@ -12,6 +12,7 @@
 *.out
 
 go.sum
+config.json
 .vscode/
 bin/
 vendor/

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-url/2.5.3/url.min.js"></script>
+
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+        integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.15.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/gijgo@1.9.13/css/gijgo.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/gijgo@1.9.13/js/gijgo.min.js"></script>
+
+    <!-- Tencent Map -->
+    <script src="https://map.qq.com/api/js?v=2.exp&key=NOABZ-BQAC4-M2GU2-XPD3R-M2OKV-S6BL5"></script>
+
+    <style>
+        .element_wood {
+            font-size: 5em;
+            color: #008800;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_fire {
+            font-size: 5em;
+            color: #880000;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_earth {
+            font-size: 5em;
+            color: #888800;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_metal {
+            font-size: 5em;
+            color: #DDDDDD;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_water {
+            font-size: 5em;
+            color: #000000;
+            text-shadow: black 0.1em 0.1em 0.2em;
+        }
+
+        .element_unknown {
+            font-size: 5em;
+            color: #000088
+        }
+    </style>
+    <script type="text/javascript">
+        var map, search_service, citylocation, marker;
+        var self_url;
+        var default_family_name = "欧阳";
+        var default_prefix_name = "";
+        var default_suffix_name = "";
+        var default_birth_time = "1999-03-24 10:00";
+        var default_latitude = 45;
+        var default_longitude = 120;
+        var default_given_name_length = 2;
+        var default_gender = 0;
+        var default_query_nums = 100;
+        var default_language = "s";
+
+        window.onload = function () {
+            function init() {
+                map = new qq.maps.Map(document.getElementById("tencent_map"), {
+                    center: new qq.maps.LatLng(39.916527, 116.397128),
+                    zoom: 12,
+                    mapStyleId: "style1"
+                });
+
+                search_service = new qq.maps.SearchService({
+                    location: "全国",
+                    complete: function (result) {
+                        console.log(result);
+                    },
+                });
+
+                citylocation = new qq.maps.CityService({
+                    complete: function (result) {
+                        map.setCenter(result.detail.latLng);
+                        $("#map_latitude").val(result.detail.latLng.lat);
+                        $("#map_longitude").val(result.detail.latLng.lng);
+                    }
+                });
+
+                marker = new qq.maps.Marker({
+                    map: null,
+                });
+
+                qq.maps.event.addListener(map, "click", function (e) {
+                    marker.setPosition(e.latLng);
+                    marker.setMap(map);
+                    $("#map_latitude").val(e.latLng.lat);
+                    $("#map_longitude").val(e.latLng.lng);
+                });
+            }
+
+            init();
+            citylocation.searchLocalCity();
+        }
+
+        function search_map() {
+            marker.setMap(null);
+            var keyword = $("#map_search_keyword").val();
+            search_service.search(keyword);
+        }
+
+        function get_kirsen() {
+            var family_name = $("#family_name").val();
+            var prefix_name = $("#prefix_name").val();
+            var suffix_name = $("#suffix_name").val();
+            var birth_time = $("#birth_time").val();
+            var birth_timestamp = $("#birth_timestamp").val();
+            var locale_offset = $("#locale_offset").val();
+            var longitude = $("#map_longitude").val();
+            var latitude = $("#map_latitude").val();
+            var given_name_length = $("#given_name_length").val();
+            var gender = $("#gender").val();
+            var query_nums = $("#query_nums").val();
+            var language = $("#language").val();
+
+            if (family_name == "") {
+                family_name = default_family_name;
+                $("#family_name").val(default_family_name);
+            }
+
+            if (prefix_name == "") {
+                prefix_name = default_prefix_name;
+                $("#prefix_name").val(default_prefix_name);
+            }
+
+            if (suffix_name == "") {
+                suffix_name = default_suffix_name;
+                $("#suffix_name").val(default_suffix_name);
+            }
+
+            if (birth_time == "") {
+                birth_timestamp = (new Date(default_birth_time).getTime()) / 1000;
+                $("#birth_time").val(default_birth_time);
+            }
+
+            if (locale_offset == "") {
+                var b = new Date(2000, 0, 1);
+                locale_offset = 0 - b.getTimezoneOffset() * 60;
+                $("#locale_offset").val(0 - (b.getTimezoneOffset()) * 60);
+            }
+
+            if (longitude == "") {
+                longitude = default_longitude;
+                $("#longitude").val(default_longitude);
+            }
+
+            if (latitude == "") {
+                latitude = default_latitude;
+                $("#latitude").val(default_latitude);
+            }
+
+            if (language == "") {
+                language = default_language;
+                $("#language").val(default_language);
+            }
+
+            var d = new Date($("#birth_time").val());
+            var t = d.getTime() / 1000;
+            var o = d.getTimezoneOffset();
+            var rt = t - o * 60;
+            var b = new Date(2000, 0, 1);
+            var time_type = "标准";
+            if (b.getTimezoneOffset() != o) {
+                time_type = "夏令时";
+            }
+
+            $("#birth_timestamp").val(t);
+            $("#locale_offset").val(0 - (o * 60));
+            $("#birth_time_type").text(time_type);
+
+            var url;
+            if ("file:" == location.protocol) {
+                url = "http://localhost:7788/name/kirsen?family=" + family_name + "&prefix=" + prefix_name +
+                    "&suffix=" + suffix_name + "&birth=" +
+                    birth_timestamp + "&longitude=" + longitude + "&latitude=" + latitude + "&gender=" + gender +
+                    "&nums=" + query_nums + "&length=" + given_name_length +
+                    "&lang=" + language;
+            } else {
+                url = "https://demo.naming.weiapi.net/name/kirsen?family=" + family_name + "&prefix=" + prefix_name +
+                    "&suffix=" + suffix_name + "&birth=" +
+                    birth_timestamp + "&longitude=" + longitude + "&latitude=" + latitude + "&gender=" + gender +
+                    "&nums=" + query_nums + "&length=" + given_name_length +
+                    "&lang=" + language;
+            }
+
+            $.ajax({
+                url: url,
+                type: "GET",
+                dataType: "json",
+            }).done(function (data) {
+                if (data.code == 0) {
+                    // Success
+                    render(data.data)
+                }
+            });
+        }
+
+        function render(data) {
+            console.log(data)
+            $("#render_name_list").empty();
+            var name_list;
+            data.forEach(function (e) {
+                if (e) {
+                    name_list += "<tr><td>[" + e.simplified.full_name + "] [" + e.traditional.full_name +
+                        "] - [" + e.pinyin_tone + "]</td><td>" + e.rank + "</td>" +
+                        "<td><a target=\"_blank\" href=\"rank.html?family_name=" + e.traditional.family_name
+                        .string + "&given_name=" + e.traditional.given_name.string + "\">查看</a></td></tr>";
+                }
+            });
+
+            $("#render_name_list").html(name_list);
+
+            return;
+        }
+    </script>
+
+    <title>起名</title>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <dic class="col p-3 text-center font-weight bolder">
+                <h1>起名</h1>
+            </dic>
+        </div>
+        <input type="hidden" id="language">
+        <div class="row justify-content-center">
+            <div class="col col-sm-2 p-3 form-group">
+                <label for="family_name">姓（支持复姓）</label>
+                <input type="text" class="form-control" id='family_name' placeholder="姓">
+            </div>
+            <div class="col col-sm-2 p-3 form-group">
+                <label for="prefix_name">谱字（可留空）</label>
+                <input type="text" class="form-control" id='prefix_name' placeholder="谱字">
+            </div>
+            <div class="col col-sm-2 p-3 form-group">
+                <label for="suffix_name">尾字（可留空）</label>
+                <input type="text" class="form-control" id='suffix_name' placeholder="尾字">
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-2 p-3 form-group">
+                <label for="given_name_length">名字字数</label>
+                <select class="form-control" id="given_name_length">
+                    <option value="1">1</option>
+                    <option value="2" selected>2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+            <div class="col col-sm-2 p-3 form-group">
+                <label for="gender">性别</label>
+                <select class="form-control" id="gender">
+                    <option value="1">男</option>
+                    <option value="2">女</option>
+                    <option value="0" selected>未知</option>
+                </select>
+            </div>
+            <div class="col col-sm-2 p-3 form-group">
+                <label for="query_nums">返回名字数量</label>
+                <select class="form-control" id="query_nums">
+                    <option value="100" selected>100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                </select>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-6 p-3">
+                <div class="form-group">
+                    <label for="birth_time">选择出生时间</label>
+                    <span id="birth_time_type"></span>
+                    <input type="input" class="form-control" id="birth_time">
+                    <input type="hidden" id="birth_timestamp">
+                    <input type="hidden" id="locale_offset">
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8 p-3 form-group">
+                <label for="tencent_map">定位出生地</label>
+                <div id="tencent_map" style="height:500px"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col p-3 text-center">
+                <button type="button" class="btn btn-primary" onclick="get_kirsen()">起名</button>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col col-sm-8 p-3 text-center">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <td class="table-dark">名字</td>
+                            <td class="table-dark">分数</td>
+                            <td class="table-dark">测算</td>
+                        </tr>
+                    </thead>
+                    <tbody id="render_name_list">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

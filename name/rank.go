@@ -102,12 +102,6 @@ type soundFiveElements struct {
 	HourSound  soundFiveElement `json:"hour_sound"`
 }
 
-type ganzhiFiveElements struct {
-	FiveElements      utils.FiveElementsCount `json:"five_elements"`
-	FiveElementsZhi   utils.FiveElementsCount `json:"five_elements_zhi"`
-	FiveElementsTotal utils.FiveElementsCount `json:"five_elements_total"`
-}
-
 type dictXinhua struct {
 	FamilyNameXinhua []*dict.XinhuaItem `json:"family_name_xinhua,omitempty"`
 	MiddleNameXinhua []*dict.XinhuaItem `json:"middle_name_xinhua,omitempty"`
@@ -136,22 +130,22 @@ type rank struct {
 // RankData : struct of name ranking result
 type RankData struct {
 	language           int
-	Name               *Name              `json:"name"`
-	DictXinhua         dictXinhua         `json:"dict_xinhua"`
-	DictFolkways       dictFolkways       `json:"dict_folkways"`
-	BaiJiaXing         *list.BaiJiaXing   `json:"bai_jia_xing,omitempty"`
-	Poetries           []*poetry.Poetry   `json:"poetries,omitempty"`
-	FiveRules          fiveRules          `json:"five_rules"`
-	EightCharacters    eightCharacters    `json:"eight_characters"`
-	Calendar           *calendar.Calendar `json:"calendar"`
-	GanzhiFiveElements ganzhiFiveElements `json:"ganzhi_five_elements"`
-	SoundFiveElements  soundFiveElements  `json:"sound_five_elements"`
-	Animal             animal             `json:"animal"`
-	Rank               rank               `json:"rank"`
-	Homonyms           []string           `json:"homonyms"`
-	FamilyNameScore    int                `json:"family_name_score"`
-	CommonName         bool               `json:"common_name"`
-	Illegal            bool               `json:"illegal"`
+	Name               *Name                  `json:"name"`
+	DictXinhua         dictXinhua             `json:"dict_xinhua"`
+	DictFolkways       dictFolkways           `json:"dict_folkways"`
+	BaiJiaXing         *list.BaiJiaXing       `json:"bai_jia_xing,omitempty"`
+	Poetries           []*poetry.Poetry       `json:"poetries,omitempty"`
+	FiveRules          fiveRules              `json:"five_rules"`
+	EightCharacters    eightCharacters        `json:"eight_characters"`
+	Calendar           *calendar.Calendar     `json:"calendar"`
+	GanzhiFiveElements GanzhiFiveElementsSpec `json:"ganzhi_five_elements"`
+	SoundFiveElements  soundFiveElements      `json:"sound_five_elements"`
+	Animal             animal                 `json:"animal"`
+	Rank               rank                   `json:"rank"`
+	Homonyms           []string               `json:"homonyms"`
+	FamilyNameScore    int                    `json:"family_name_score"`
+	CommonName         bool                   `json:"common_name"`
+	Illegal            bool                   `json:"illegal"`
 }
 
 func (rank *RankData) calculateFiveRules() {
@@ -268,93 +262,7 @@ func (rank *RankData) calculateEightCharacters() {
 }
 
 func (rank *RankData) calculateGanzhi() {
-	var v int
-	// TianGan
-	for _, v = range []int{rank.Calendar.Ganzhi.Year.TianGan,
-		rank.Calendar.Ganzhi.Month.TianGan,
-		rank.Calendar.Ganzhi.Day.TianGan,
-		rank.Calendar.Ganzhi.Hour.TianGan} {
-		switch v {
-		case utils.GanJia, utils.GanYi:
-			rank.GanzhiFiveElements.FiveElements.Wood++
-		case utils.GanBing, utils.GanDing:
-			rank.GanzhiFiveElements.FiveElements.Fire++
-		case utils.GanWu, utils.GanJi:
-			rank.GanzhiFiveElements.FiveElements.Earth++
-		case utils.GanGeng, utils.GanXin:
-			rank.GanzhiFiveElements.FiveElements.Metal++
-		case utils.GanRen, utils.GanGui:
-			rank.GanzhiFiveElements.FiveElements.Water++
-		}
-	}
-
-	// DiZhi & ZhiCang
-	for _, v = range []int{rank.Calendar.Ganzhi.Year.DiZhi,
-		rank.Calendar.Ganzhi.Month.DiZhi,
-		rank.Calendar.Ganzhi.Day.DiZhi,
-		rank.Calendar.Ganzhi.Hour.DiZhi} {
-		switch v {
-		case utils.ZhiZi:
-			rank.GanzhiFiveElements.FiveElements.Water++
-			rank.GanzhiFiveElements.FiveElementsZhi.Water++ // 癸
-		case utils.ZhiChou:
-			rank.GanzhiFiveElements.FiveElements.Earth++
-			rank.GanzhiFiveElements.FiveElementsZhi.Earth++ // 己
-			rank.GanzhiFiveElements.FiveElementsZhi.Metal++ // 辛
-			rank.GanzhiFiveElements.FiveElementsZhi.Water++ // 癸
-		case utils.ZhiYin:
-			rank.GanzhiFiveElements.FiveElements.Wood++
-			rank.GanzhiFiveElements.FiveElementsZhi.Wood++  // 甲
-			rank.GanzhiFiveElements.FiveElementsZhi.Fire++  // 丙
-			rank.GanzhiFiveElements.FiveElementsZhi.Earth++ // 戊
-		case utils.ZhiMao:
-			rank.GanzhiFiveElements.FiveElements.Wood++
-			rank.GanzhiFiveElements.FiveElementsZhi.Wood++ // 乙
-		case utils.ZhiChen:
-			rank.GanzhiFiveElements.FiveElements.Earth++
-			rank.GanzhiFiveElements.FiveElementsZhi.Earth++ // 戊
-			rank.GanzhiFiveElements.FiveElementsZhi.Water++ // 癸
-			rank.GanzhiFiveElements.FiveElementsZhi.Wood++  // 乙
-		case utils.ZhiSi:
-			rank.GanzhiFiveElements.FiveElements.Fire++
-			rank.GanzhiFiveElements.FiveElementsZhi.Fire++  // 丙
-			rank.GanzhiFiveElements.FiveElementsZhi.Earth++ // 戊
-			rank.GanzhiFiveElements.FiveElementsZhi.Metal++ // 庚
-		case utils.ZhiWu:
-			rank.GanzhiFiveElements.FiveElements.Fire++
-			rank.GanzhiFiveElements.FiveElementsZhi.Fire++  // 丁
-			rank.GanzhiFiveElements.FiveElementsZhi.Earth++ // 己
-		case utils.ZhiWei:
-			rank.GanzhiFiveElements.FiveElements.Earth++
-			rank.GanzhiFiveElements.FiveElementsZhi.Earth++ // 己
-			rank.GanzhiFiveElements.FiveElementsZhi.Wood++  // 乙
-			rank.GanzhiFiveElements.FiveElementsZhi.Fire++  // 丁
-		case utils.ZhiShen:
-			rank.GanzhiFiveElements.FiveElements.Metal++
-			rank.GanzhiFiveElements.FiveElementsZhi.Metal++ // 庚
-			rank.GanzhiFiveElements.FiveElementsZhi.Water++ // 壬
-			rank.GanzhiFiveElements.FiveElementsZhi.Earth++ // 戊
-		case utils.ZhiYou:
-			rank.GanzhiFiveElements.FiveElements.Metal++
-			rank.GanzhiFiveElements.FiveElementsZhi.Metal++ // 辛
-		case utils.ZhiXu:
-			rank.GanzhiFiveElements.FiveElements.Earth++
-			rank.GanzhiFiveElements.FiveElementsZhi.Earth++ // 戊
-			rank.GanzhiFiveElements.FiveElementsZhi.Metal++ // 辛
-			rank.GanzhiFiveElements.FiveElementsZhi.Fire++  // 丁
-		case utils.ZhiHai:
-			rank.GanzhiFiveElements.FiveElements.Water++
-			rank.GanzhiFiveElements.FiveElementsZhi.Water++ // 壬
-			rank.GanzhiFiveElements.FiveElementsZhi.Wood++  // 甲
-		}
-	}
-
-	// Total
-	rank.GanzhiFiveElements.FiveElementsTotal.Wood = rank.GanzhiFiveElements.FiveElements.Wood + rank.GanzhiFiveElements.FiveElementsZhi.Wood
-	rank.GanzhiFiveElements.FiveElementsTotal.Fire = rank.GanzhiFiveElements.FiveElements.Fire + rank.GanzhiFiveElements.FiveElementsZhi.Fire
-	rank.GanzhiFiveElements.FiveElementsTotal.Earth = rank.GanzhiFiveElements.FiveElements.Earth + rank.GanzhiFiveElements.FiveElementsZhi.Earth
-	rank.GanzhiFiveElements.FiveElementsTotal.Metal = rank.GanzhiFiveElements.FiveElements.Metal + rank.GanzhiFiveElements.FiveElementsZhi.Metal
-	rank.GanzhiFiveElements.FiveElementsTotal.Water = rank.GanzhiFiveElements.FiveElements.Water + rank.GanzhiFiveElements.FiveElementsZhi.Water
+	rank.GanzhiFiveElements = GanzhiFiveElements(rank.Calendar)
 }
 
 func (rank *RankData) calculateSounds() {
@@ -479,7 +387,7 @@ func groupPinyin(pinyin []string) [][]string {
 }
 
 // Rank : Rank name with birth time
-func Rank(language int, name *Name, birthTime int64, loc utils.Location) *RankData {
+func Rank(language int, name *Name, birthTime int64, loc utils.Location) (*RankData, error) {
 	var (
 		rank        = &RankData{language: language, Name: name, Illegal: false}
 		pinyinGroup [][]string
@@ -496,7 +404,7 @@ func Rank(language int, name *Name, birthTime int64, loc utils.Location) *RankDa
 
 		if sensitives != nil {
 			rank.Illegal = true
-			return rank
+			return rank, fmt.Errorf("Illegal name")
 		}
 
 		if commons != nil {
@@ -523,7 +431,7 @@ func Rank(language int, name *Name, birthTime int64, loc utils.Location) *RankDa
 	rank.queryPoetry()
 	rank.calculateRanks()
 
-	return rank
+	return rank, nil
 }
 
 /*

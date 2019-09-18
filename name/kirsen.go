@@ -33,7 +33,9 @@ package name
 import (
 	"fmt"
 	"math"
+	"yixuan_naming/utils"
 
+	"yixuan_naming/calendar"
 	"yixuan_naming/list"
 	"yixuan_naming/unihan"
 )
@@ -49,6 +51,78 @@ const (
 var (
 	strokeTable [][][]int
 )
+
+// KirsenConditions : Conditions of name list generation
+type KirsenConditions struct {
+	FamilyNameRunes []rune
+	MiddleNameRunes []rune
+	PrefixNameRunes []rune
+	SuffixNameRunes []rune
+	Gender          int
+	NeedMiddleName  bool
+	NeedBirthTime   bool
+	GivenNameLength int
+	QueryNums       int
+	CharacterLevel  int
+}
+
+// Traditionalize : Traditionalize conditions
+func (c *KirsenConditions) Traditionalize() {
+	var (
+		rt  rune
+		u   *unihan.HanCharacter
+		err error
+	)
+
+	for i, r := range c.FamilyNameRunes {
+		u, err = unihan.Query(r)
+		if err == nil {
+			rt, err = u.QueryTraditionalLazy()
+			if err == nil {
+				c.FamilyNameRunes[i] = rt
+			}
+		}
+	}
+
+	for i, r := range c.MiddleNameRunes {
+		u, err = unihan.Query(r)
+		if err == nil {
+			rt, err = u.QueryTraditionalLazy()
+			if err == nil {
+				c.MiddleNameRunes[i] = rt
+			}
+		}
+	}
+
+	for i, r := range c.PrefixNameRunes {
+		u, err = unihan.Query(r)
+		if err == nil {
+			rt, err = u.QueryTraditionalLazy()
+			if err == nil {
+				c.PrefixNameRunes[i] = rt
+			}
+		}
+	}
+
+	for i, r := range c.SuffixNameRunes {
+		u, err = unihan.Query(r)
+		if err == nil {
+			rt, err = u.QueryTraditionalLazy()
+			if err == nil {
+				c.SuffixNameRunes[i] = rt
+			}
+		}
+	}
+
+	return
+}
+
+// KirsenData : Kirsen result
+type KirsenData struct {
+	language int
+	List     []*Name            `json:"list"`
+	Calendar *calendar.Calendar `json:"calendar"`
+}
 
 // CalcCommonStrokes : Get strokes of common characters
 func CalcCommonStrokes(level int) {
@@ -226,7 +300,7 @@ func kirsenTriple(list1, list2, list3 []rune) [][]rune {
 }
 
 // Kirsen : Fetch name list
-func Kirsen(c *ListConditions) ([]*Name, error) {
+func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Location) (*KirsenData, error) {
 	var (
 		h              *unihan.HanCharacter
 		err            error
@@ -238,8 +312,15 @@ func Kirsen(c *ListConditions) ([]*Name, error) {
 		givenNameRunes [][]rune
 		total          int
 		name           *Name
-		ret            []*Name
+		nameList       []*Name
+		kirsen         = &KirsenData{}
 	)
+
+	kirsen.Calendar = calendar.New(birthTime, loc)
+	kirsen.Calendar.Ganzhi.YearString = kirsen.Calendar.Ganzhi.Year.String(kirsen.language)
+	kirsen.Calendar.Ganzhi.MonthString = kirsen.Calendar.Ganzhi.Month.String(kirsen.language)
+	kirsen.Calendar.Ganzhi.DayString = kirsen.Calendar.Ganzhi.Day.String(kirsen.language)
+	kirsen.Calendar.Ganzhi.HourString = kirsen.Calendar.Ganzhi.Hour.String(kirsen.language)
 
 	if c.CharacterLevel != 2 {
 		c.CharacterLevel = 1
@@ -336,7 +417,7 @@ func Kirsen(c *ListConditions) ([]*Name, error) {
 
 							name = NewNameRunes(c.FamilyNameRunes, nil, v)
 							name.Rank = rank
-							ret = append(ret, name)
+							nameList = append(nameList, name)
 							total++
 						}
 					}
@@ -349,16 +430,18 @@ func Kirsen(c *ListConditions) ([]*Name, error) {
 		}
 	}
 
-	if len(ret) > c.QueryNums {
-		ret = ret[:c.QueryNums]
+	if len(nameList) > c.QueryNums {
+		nameList = nameList[:c.QueryNums]
 	}
 
-	for _, name = range ret {
+	for _, name = range nameList {
 		name.Normalize()
 		name.RemoveUnihan()
 	}
 
-	return ret, nil
+	kirsen.List = nameList
+
+	return kirsen, nil
 }
 
 func genTable() {
