@@ -43,6 +43,14 @@ type GanzhiFiveElementsSpec struct {
 	FiveElementsTotal utils.FiveElementsCount `json:"five_elements_total"`
 }
 
+// SoundFiveElements : Sound five-elements
+type SoundFiveElements struct {
+	YearSound  soundFiveElement `json:"year_sound"`
+	MonthSound soundFiveElement `json:"month_sound"`
+	DaySound   soundFiveElement `json:"day_sound"`
+	HourSound  soundFiveElement `json:"hour_sound"`
+}
+
 // GanzhiSound : Get sound five-elements by given gan-zhi
 func GanzhiSound(ganzhi utils.GanzhiPair) int {
 	return ganzhi.Value()

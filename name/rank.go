@@ -95,13 +95,6 @@ type soundFiveElement struct {
 	Description string `json:"description"`
 }
 
-type soundFiveElements struct {
-	YearSound  soundFiveElement `json:"year_sound"`
-	MonthSound soundFiveElement `json:"month_sound"`
-	DaySound   soundFiveElement `json:"day_sound"`
-	HourSound  soundFiveElement `json:"hour_sound"`
-}
-
 type dictXinhua struct {
 	FamilyNameXinhua []*dict.XinhuaItem `json:"family_name_xinhua,omitempty"`
 	MiddleNameXinhua []*dict.XinhuaItem `json:"middle_name_xinhua,omitempty"`
@@ -112,11 +105,6 @@ type dictFolkways struct {
 	FamilyNameFolkway []*dict.FolkwayItem `json:"family_name_folkway,omitempty"`
 	MiddleNameFolkway []*dict.FolkwayItem `json:"middle_name_folkway,omitempty"`
 	GivenNameFolkway  []*dict.FolkwayItem `json:"given_name_folkway,omitempty"`
-}
-
-type animal struct {
-	Radicals *animalRadicals `json:"radicals"`
-	Years    string          `json:"years"`
 }
 
 type rank struct {
@@ -139,7 +127,7 @@ type RankData struct {
 	EightCharacters    eightCharacters        `json:"eight_characters"`
 	Calendar           *calendar.Calendar     `json:"calendar"`
 	GanzhiFiveElements GanzhiFiveElementsSpec `json:"ganzhi_five_elements"`
-	SoundFiveElements  soundFiveElements      `json:"sound_five_elements"`
+	SoundFiveElements  SoundFiveElements      `json:"sound_five_elements"`
 	Animal             animal                 `json:"animal"`
 	Rank               rank                   `json:"rank"`
 	Homonyms           []string               `json:"homonyms"`
@@ -359,6 +347,7 @@ func (rank *RankData) queryCommonName() {
 	v := list.QueryCommonNames(fmt.Sprintf("%s%s", rank.Name.Simplified.FamilyName.Str, rank.Name.Simplified.GivenName.Str))
 	if v > 0 {
 		rank.CommonName = true
+		rank.Name.IsCommon = true
 	}
 }
 

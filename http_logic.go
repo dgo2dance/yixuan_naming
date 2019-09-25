@@ -262,7 +262,7 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 	}
 
 	conditions.Traditionalize()
-	r.Logger.Printf("Name kirsen from %s with family name <%v>, prefix <%v> and suffix <%v>, birth timestamp <%d>, location <%f:%f>, given name length <%d>, gender <%d>, query numbers <%d>, language <%d>",
+	r.Logger.Printf("Name kirsen from %s with family name <%v>, prefix <%v> and suffix <%v>, birth timestamp <%d>, location <%f:%f>, given name length <%d>, gender <%d>, character level <%d>, query numbers <%d>, language <%d>",
 		ctx.RemoteIP().String(),
 		conditions.FamilyNameRunes,
 		conditions.PrefixNameRunes,
@@ -272,6 +272,7 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 		longitude,
 		givenNameLength,
 		gender,
+		characterLevel,
 		queryNums,
 		languageCode)
 

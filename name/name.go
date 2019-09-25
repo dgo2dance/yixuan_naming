@@ -64,6 +64,7 @@ type Name struct {
 	PinyinTone  []string `json:"pinyin_tone"`
 	Pinyin      []string `json:"pinyin"`
 	Rank        int      `json:"rank,omitempty"`
+	IsCommon    bool     `json:"is_common"`
 }
 
 // NewName : Create name from string

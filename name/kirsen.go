@@ -33,6 +33,7 @@ package name
 import (
 	"fmt"
 	"math"
+	"yixuan_naming/texts"
 	"yixuan_naming/utils"
 
 	"yixuan_naming/calendar"
@@ -119,9 +120,29 @@ func (c *KirsenConditions) Traditionalize() {
 
 // KirsenData : Kirsen result
 type KirsenData struct {
-	language int
-	List     []*Name            `json:"list"`
-	Calendar *calendar.Calendar `json:"calendar"`
+	language           int
+	List               []*Name                `json:"list"`
+	Calendar           *calendar.Calendar     `json:"calendar"`
+	GanzhiFiveElements GanzhiFiveElementsSpec `json:"ganzhi_five_elements"`
+	SoundFiveElements  SoundFiveElements      `json:"sound_five_elements"`
+	Animal             animal                 `json:"animal"`
+	Total              int                    `json:"total"`
+}
+
+func (kirsen *KirsenData) calculateGanzhi() {
+	kirsen.GanzhiFiveElements = GanzhiFiveElements(kirsen.Calendar)
+}
+
+func (kirsen *KirsenData) calculateSounds() {
+	kirsen.SoundFiveElements.YearSound.id, kirsen.SoundFiveElements.YearSound.Name, kirsen.SoundFiveElements.YearSound.Description = GanzhiSoundAlias(kirsen.Calendar.Ganzhi.Year, kirsen.language)
+	kirsen.SoundFiveElements.MonthSound.id, kirsen.SoundFiveElements.MonthSound.Name, kirsen.SoundFiveElements.MonthSound.Description = GanzhiSoundAlias(kirsen.Calendar.Ganzhi.Month, kirsen.language)
+	kirsen.SoundFiveElements.DaySound.id, kirsen.SoundFiveElements.DaySound.Name, kirsen.SoundFiveElements.DaySound.Description = GanzhiSoundAlias(kirsen.Calendar.Ganzhi.Day, kirsen.language)
+	kirsen.SoundFiveElements.HourSound.id, kirsen.SoundFiveElements.HourSound.Name, kirsen.SoundFiveElements.HourSound.Description = GanzhiSoundAlias(kirsen.Calendar.Ganzhi.Hour, kirsen.language)
+}
+
+func (kirsen *KirsenData) calculateAnimal() {
+	kirsen.Animal.Radicals = getAnimalRadicals(kirsen.Calendar.Lunar.AnimalSign, kirsen.language)
+	kirsen.Animal.Years = texts.GetMessage(texts.MessageAnimalYear, kirsen.Calendar.Lunar.AnimalSign, kirsen.language)
 }
 
 // CalcCommonStrokes : Get strokes of common characters
@@ -311,6 +332,7 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 		cg0, cg1       []rune
 		givenNameRunes [][]rune
 		total          int
+		topRank        int
 		name           *Name
 		nameList       []*Name
 		kirsen         = &KirsenData{}
@@ -321,6 +343,10 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 	kirsen.Calendar.Ganzhi.MonthString = kirsen.Calendar.Ganzhi.Month.String(kirsen.language)
 	kirsen.Calendar.Ganzhi.DayString = kirsen.Calendar.Ganzhi.Day.String(kirsen.language)
 	kirsen.Calendar.Ganzhi.HourString = kirsen.Calendar.Ganzhi.Hour.String(kirsen.language)
+
+	kirsen.calculateGanzhi()
+	kirsen.calculateSounds()
+	kirsen.calculateAnimal()
 
 	if c.CharacterLevel != 2 {
 		c.CharacterLevel = 1
@@ -370,6 +396,14 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 	sList = GetRanksFromTable(f0, f1)
 	for rank = MaxRank; rank > 0; rank-- {
 		if sList[rank] != nil {
+			if topRank == 0 {
+				topRank = rank
+			}
+
+			if c.QueryNums == 0 && rank < topRank {
+				break
+			}
+
 			for _, g = range sList[rank] {
 				g0 = g % (list.MaxStroke)
 				g1 = g / (list.MaxStroke)
@@ -424,22 +458,28 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 				}
 			}
 
-			if total > c.QueryNums {
+			if c.QueryNums > 0 && total > c.QueryNums {
 				break
 			}
 		}
 	}
 
-	if len(nameList) > c.QueryNums {
+	if c.QueryNums > 0 && len(nameList) > c.QueryNums {
 		nameList = nameList[:c.QueryNums]
+		total = c.QueryNums
 	}
 
 	for _, name = range nameList {
 		name.Normalize()
 		name.RemoveUnihan()
+		v := list.QueryCommonNames(fmt.Sprintf("%s%s", name.Simplified.FamilyName.Str, name.Simplified.GivenName.Str))
+		if v > 0 {
+			name.IsCommon = true
+		}
 	}
 
 	kirsen.List = nameList
+	kirsen.Total = total
 
 	return kirsen, nil
 }

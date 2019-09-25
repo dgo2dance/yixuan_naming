@@ -51,6 +51,11 @@ type animalRadicalsTpl struct {
 	ominous [][]int
 }
 
+type animal struct {
+	Radicals *animalRadicals `json:"radicals"`
+	Years    string          `json:"years"`
+}
+
 var (
 	animalRadicalsTplList = []animalRadicalsTpl{
 		// 0
