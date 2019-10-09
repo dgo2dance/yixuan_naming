@@ -344,7 +344,7 @@
                     " 位，郡望：[" + data.bai_jia_xing.place + "]");
             }
 
-            if (data.common_name) {
+            if (data.name.is_common) {
                 $("#render_name_is_common").text("该名字 为 常用名");
             } else {
                 $("#render_name_is_common").text("该名字 非 常用名");

@@ -125,6 +125,7 @@ type KirsenData struct {
 	Calendar           *calendar.Calendar     `json:"calendar"`
 	GanzhiFiveElements GanzhiFiveElementsSpec `json:"ganzhi_five_elements"`
 	SoundFiveElements  SoundFiveElements      `json:"sound_five_elements"`
+	EightCharacters    eightCharacters        `json:"eight_characters"`
 	Animal             animal                 `json:"animal"`
 	Total              int                    `json:"total"`
 }
@@ -143,6 +144,14 @@ func (kirsen *KirsenData) calculateSounds() {
 func (kirsen *KirsenData) calculateAnimal() {
 	kirsen.Animal.Radicals = getAnimalRadicals(kirsen.Calendar.Lunar.AnimalSign, kirsen.language)
 	kirsen.Animal.Years = texts.GetMessage(texts.MessageAnimalYear, kirsen.Calendar.Lunar.AnimalSign, kirsen.language)
+}
+
+func (kirsen *KirsenData) calculateEightCharacters() {
+	kirsen.EightCharacters.Year = &kirsen.Calendar.Ganzhi.Year
+	kirsen.EightCharacters.Month = &kirsen.Calendar.Ganzhi.Month
+	kirsen.EightCharacters.Day = &kirsen.Calendar.Ganzhi.Day
+	kirsen.EightCharacters.Hour = &kirsen.Calendar.Ganzhi.Hour
+	kirsen.EightCharacters.complete()
 }
 
 // CalcCommonStrokes : Get strokes of common characters
@@ -347,6 +356,7 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 	kirsen.calculateGanzhi()
 	kirsen.calculateSounds()
 	kirsen.calculateAnimal()
+	kirsen.calculateEightCharacters()
 
 	if c.CharacterLevel != 2 {
 		c.CharacterLevel = 1
@@ -395,72 +405,74 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 	// Fetch table
 	sList = GetRanksFromTable(f0, f1)
 	for rank = MaxRank; rank > 0; rank-- {
-		if sList[rank] != nil {
-			if topRank == 0 {
-				topRank = rank
-			}
+		if sList[rank] == nil {
+			continue
+		}
 
-			if c.QueryNums == 0 && rank < topRank {
-				break
-			}
+		if c.QueryNums == 0 && rank < topRank {
+			break
+		}
 
-			for _, g = range sList[rank] {
-				g0 = g % (list.MaxStroke)
-				g1 = g / (list.MaxStroke)
+		for _, g = range sList[rank] {
+			g0 = g % (list.MaxStroke)
+			g1 = g / (list.MaxStroke)
 
-				if g0 > 0 {
-					if p > 0 && g0 != p {
-						continue
-					}
+			if g0 > 0 {
+				if p > 0 && g0 != p {
+					continue
+				}
 
-					if c.CharacterLevel == 2 {
-						cg0 = list.GetCommonL2ByStrokeTraditional(g0)
-					} else {
-						cg0 = list.GetCommonL1ByStrokeTraditional(g0)
-					}
+				if c.CharacterLevel == 2 {
+					cg0 = list.GetCommonL2ByStrokeTraditional(g0)
+				} else {
+					cg0 = list.GetCommonL1ByStrokeTraditional(g0)
+				}
 
-					if cg0 != nil && len(cg0) > 0 {
-						if g1 > 0 && c.GivenNameLength > 1 {
-							// Double
-							if s > 0 && g1 != s {
-								continue
-							}
+				if cg0 != nil && len(cg0) > 0 {
+					if g1 > 0 && c.GivenNameLength > 1 {
+						// Double
+						if s > 0 && g1 != s {
+							continue
+						}
 
-							if c.CharacterLevel == 2 {
-								cg1 = list.GetCommonL2ByStrokeTraditional(g1)
-							} else {
-								cg1 = list.GetCommonL1ByStrokeTraditional(g1)
-							}
-
-							if cg1 != nil && len(cg1) > 0 {
-								givenNameRunes = kirsenDouble(cg0, cg1)
-							}
+						if c.CharacterLevel == 2 {
+							cg1 = list.GetCommonL2ByStrokeTraditional(g1)
 						} else {
-							// Single
-							givenNameRunes = kirsenSingle(cg0)
+							cg1 = list.GetCommonL1ByStrokeTraditional(g1)
 						}
 
-						for _, v := range givenNameRunes {
-							if p > 0 && c.PrefixNameRunes[0] != v[0] {
-								continue
-							}
-
-							if s > 0 && c.SuffixNameRunes[0] != v[len(v)-1] {
-								continue
-							}
-
-							name = NewNameRunes(c.FamilyNameRunes, nil, v)
-							name.Rank = rank
-							nameList = append(nameList, name)
-							total++
+						if cg1 != nil && len(cg1) > 0 {
+							givenNameRunes = kirsenDouble(cg0, cg1)
 						}
+					} else {
+						// Single
+						givenNameRunes = kirsenSingle(cg0)
+					}
+
+					for _, v := range givenNameRunes {
+						if p > 0 && c.PrefixNameRunes[0] != v[0] {
+							continue
+						}
+
+						if s > 0 && c.SuffixNameRunes[0] != v[len(v)-1] {
+							continue
+						}
+
+						if topRank == 0 {
+							topRank = rank
+						}
+
+						name = NewNameRunes(c.FamilyNameRunes, nil, v)
+						name.Rank = rank
+						nameList = append(nameList, name)
+						total++
 					}
 				}
 			}
+		}
 
-			if c.QueryNums > 0 && total > c.QueryNums {
-				break
-			}
+		if c.QueryNums > 0 && total > c.QueryNums {
+			break
 		}
 	}
 

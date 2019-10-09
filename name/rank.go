@@ -132,7 +132,7 @@ type RankData struct {
 	Rank               rank                   `json:"rank"`
 	Homonyms           []string               `json:"homonyms"`
 	FamilyNameScore    int                    `json:"family_name_score"`
-	CommonName         bool                   `json:"common_name"`
+	CommonName         bool                   `json:"common_name"` // Deprecated
 	Illegal            bool                   `json:"illegal"`
 }
 

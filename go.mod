@@ -8,4 +8,5 @@ require (
 	github.com/giorgisio/goav v0.1.0 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/valyala/fasthttp v1.4.0
+	golang.org/x/tools/gopls v0.1.7 // indirect
 )

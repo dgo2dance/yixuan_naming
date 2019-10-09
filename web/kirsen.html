@@ -344,6 +344,35 @@
                 .description
             );
 
+            $("#render_body_stretch_detail").text(
+                data.eight_characters.ling +
+                ((data.eight_characters.ling >= 50) ? "（得） / " : "（失） / ") +
+                data.eight_characters.shi +
+                ((data.eight_characters.shi >= 10) ? "（得） / " : "（失） / ") +
+                (data.eight_characters.di ? "（得）" : "（失）")
+            );
+
+            $("#render_body_stretch_yi_detail").text(
+                data.eight_characters.ling +
+                ((data.eight_characters.ling >= 50) ? "（得） / " : "（失） / ") +
+                data.eight_characters.shi_yi +
+                ((data.eight_characters.shi_yi >= 10) ? "（得）" : "（失）")
+            );
+
+            $("#render_body_stretch_description").text(
+                "八字身偏[" +
+                (data.eight_characters.stretch ? "强" : "弱") + "]，属[" +
+                five_elements[data.eight_characters.self] + "]，喜[" +
+                five_elements[data.eight_characters.like] + "]。"
+            );
+
+            $("#render_body_stretch_yi_description").text(
+                "八字身偏[" +
+                (data.eight_characters.stretch_yi ? "强" : "弱") + "]，属[" +
+                five_elements[data.eight_characters.self] + "]，喜[" +
+                five_elements[data.eight_characters.like_yi] + "]。"
+            );
+
             $("#render_animal_years").text(
                 data.animal.years
             );
@@ -372,6 +401,10 @@
 
             $("#render_name_list").empty();
             var name_list;
+            if (data.list == null) {
+                data.list = [];
+            }
+
             data.list.forEach(function (e) {
                 if (e) {
                     name_list += "<tr><td>[" + e.simplified.full_name + "] [" + e.traditional.full_name +

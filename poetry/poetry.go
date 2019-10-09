@@ -96,6 +96,18 @@ func QueryPoetries(word string) []*Poetry {
 	return ret
 }
 
+// InPoetries : Whether word in poetries
+func InPoetries(word string) bool {
+	tags, ok := poetryWordsMSimplified[word]
+	if ok {
+		if len(tags) > 0 {
+			return true
+		}
+	}
+
+	return false
+}
+
 // LoadPoetries : Load poetry from list
 func LoadPoetries(dir string) (int, int, error) {
 	var (
