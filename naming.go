@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	g = common.NewRuntime("naming_demo")
+	g = common.NewRuntime("naming")
 	s = common.NewHTTPServer(g)
 )
 
@@ -108,6 +108,14 @@ func main() {
 		g.Logger.Fatal(err)
 	} else {
 		g.Logger.Printf("Load %d lines from pinyin special list", lines)
+	}
+
+	// StrokeSpecial
+	lines, err = list.LoadStrokeSpecial(g.Config.GetString("Library_Path"))
+	if err != nil {
+		g.Logger.Fatal(err)
+	} else {
+		g.Logger.Printf("Load %d lines from stroke special list", lines)
 	}
 
 	// Common words

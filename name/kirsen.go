@@ -64,6 +64,8 @@ type KirsenConditions struct {
 	NeedBirthTime   bool
 	GivenNameLength int
 	QueryNums       int
+	MaxRank         int
+	MinRank         int
 	CharacterLevel  int
 }
 
@@ -121,7 +123,7 @@ func (c *KirsenConditions) Traditionalize() {
 // KirsenData : Kirsen result
 type KirsenData struct {
 	language           int
-	List               []*Name                `json:"list"`
+	List               map[string][]*Name     `json:"list"`
 	Calendar           *calendar.Calendar     `json:"calendar"`
 	GanzhiFiveElements GanzhiFiveElementsSpec `json:"ganzhi_five_elements"`
 	SoundFiveElements  SoundFiveElements      `json:"sound_five_elements"`
@@ -161,7 +163,6 @@ func CalcCommonStrokes(level int) {
 		c             *unihan.HanCharacter
 		stroke        int
 		strokeCounter = make(map[int]int)
-		count         int
 	)
 
 	switch level {
@@ -174,13 +175,12 @@ func CalcCommonStrokes(level int) {
 	for r := range charList {
 		c, _ = unihan.Query(r)
 		if c != nil {
-			stroke = c.QueryStrokePrefer()
+			stroke = list.QueryStrokeSpecial(r)
+			if stroke <= 0 {
+				stroke = c.QueryStrokePrefer()
+			}
 			strokeCounter[stroke]++
 		}
-	}
-
-	for stroke, count = range strokeCounter {
-		fmt.Println("Stroke: ", stroke, "\tCount: ", count)
 	}
 
 	return
@@ -347,6 +347,7 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 		kirsen         = &KirsenData{}
 	)
 
+	// Calendar
 	kirsen.Calendar = calendar.New(birthTime, loc)
 	kirsen.Calendar.Ganzhi.YearString = kirsen.Calendar.Ganzhi.Year.String(kirsen.language)
 	kirsen.Calendar.Ganzhi.MonthString = kirsen.Calendar.Ganzhi.Month.String(kirsen.language)
@@ -358,6 +359,7 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 	kirsen.calculateAnimal()
 	kirsen.calculateEightCharacters()
 
+	// Max character level = 2
 	if c.CharacterLevel != 2 {
 		c.CharacterLevel = 1
 	}
@@ -366,10 +368,14 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 		c.QueryNums = MaxNames
 	}
 
+	// Hyphenated name
 	if len(c.FamilyNameRunes) > 1 {
 		h, err = unihan.Query(c.FamilyNameRunes[1])
 		if err == nil {
-			f1 = h.QueryStrokePrefer()
+			f1 = list.QueryStrokeSpecial(c.FamilyNameRunes[1])
+			if f1 <= 0 {
+				f1 = h.QueryStrokePrefer()
+			}
 		} else {
 			return nil, err
 		}
@@ -378,7 +384,10 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 	if len(c.FamilyNameRunes) > 0 {
 		h, err = unihan.Query(c.FamilyNameRunes[0])
 		if err == nil {
-			f0 = h.QueryStrokePrefer()
+			f0 = list.QueryStrokeSpecial(c.FamilyNameRunes[0])
+			if f0 <= 0 {
+				f0 = h.QueryStrokePrefer()
+			}
 		} else {
 			return nil, err
 		}
@@ -387,7 +396,10 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 	if len(c.PrefixNameRunes) > 0 {
 		h, err = unihan.Query(c.PrefixNameRunes[0])
 		if err == nil {
-			p = h.QueryStrokePrefer()
+			p = list.QueryStrokeSpecial(c.PrefixNameRunes[0])
+			if p <= 0 {
+				p = h.QueryStrokePrefer()
+			}
 		} else {
 			return nil, err
 		}
@@ -396,7 +408,10 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 	if len(c.SuffixNameRunes) > 0 {
 		h, err = unihan.Query(c.SuffixNameRunes[0])
 		if err == nil {
-			s = h.QueryStrokePrefer()
+			s = list.QueryStrokeSpecial(c.SuffixNameRunes[0])
+			if s <= 0 {
+				s = h.QueryStrokePrefer()
+			}
 		} else {
 			return nil, err
 		}
@@ -409,8 +424,23 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 			continue
 		}
 
-		if c.QueryNums == 0 && rank < topRank {
-			break
+		if c.QueryNums == 0 {
+			// Unlimited query number
+			if c.MaxRank > c.MinRank && c.MinRank > 0 {
+				// Level between
+				if rank > c.MaxRank {
+					continue
+				}
+
+				if rank < c.MinRank {
+					break
+				}
+			} else {
+				// Top rank
+				if rank < topRank {
+					break
+				}
+			}
 		}
 
 		for _, g = range sList[rank] {
@@ -481,6 +511,7 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 		total = c.QueryNums
 	}
 
+	kirsen.List = make(map[string][]*Name)
 	for _, name = range nameList {
 		name.Normalize()
 		name.RemoveUnihan()
@@ -488,9 +519,13 @@ func Kirsen(language int, c *KirsenConditions, birthTime int64, loc utils.Locati
 		if v > 0 {
 			name.IsCommon = true
 		}
+
+		// Re-arrange kirsen list
+		group := name.Traditional.GivenName.Runes[0]
+		kirsen.List[string(group)] = append(kirsen.List[string(group)], name)
 	}
 
-	kirsen.List = nameList
+	// kirsen.List = nameList
 	kirsen.Total = total
 
 	return kirsen, nil

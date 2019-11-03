@@ -178,6 +178,8 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 		givenNameLength int
 		gender          int
 		queryNums       int
+		maxRank         int
+		minRank         int
 		characterLevel  int
 		language        []byte
 		languageCode    int
@@ -239,6 +241,8 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 	}
 
 	queryNums = args.GetUintOrZero("nums")
+	maxRank = args.GetUintOrZero("max_rank")
+	minRank = args.GetUintOrZero("min_rank")
 	language = args.Peek("lang")
 	languageCode = texts.AssertLanguage(string(language))
 	characterLevel = args.GetUintOrZero("character_level")
@@ -258,11 +262,13 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 		NeedBirthTime:   false,
 		GivenNameLength: givenNameLength,
 		QueryNums:       queryNums,
+		MaxRank:         maxRank,
+		MinRank:         minRank,
 		CharacterLevel:  characterLevel,
 	}
 
 	conditions.Traditionalize()
-	r.Logger.Printf("Name kirsen from %s with family name <%v>, prefix <%v> and suffix <%v>, birth timestamp <%d>, location <%f:%f>, given name length <%d>, gender <%d>, character level <%d>, query numbers <%d>, language <%d>",
+	r.Logger.Printf("Name kirsen from %s with family name <%v>, prefix <%v> and suffix <%v>, birth timestamp <%d>, location <%f:%f>, given name length <%d>, gender <%d>, character level <%d>, query numbers <%d>, level between <%d, %d> language <%d>",
 		ctx.RemoteIP().String(),
 		conditions.FamilyNameRunes,
 		conditions.PrefixNameRunes,
@@ -274,6 +280,8 @@ func nameKirsen(ctx *fasthttp.RequestCtx) {
 		gender,
 		characterLevel,
 		queryNums,
+		minRank,
+		maxRank,
 		languageCode)
 
 	ret, _ := name.Kirsen(languageCode, conditions, birthTime, utils.Location{Latitude: latitude, Longitude: longitude})

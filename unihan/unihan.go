@@ -362,6 +362,7 @@ func (c *HanCharacter) QueryStroke() (int, int, int, error) {
 // QueryStrokePrefer : Query stroke singly
 func (c *HanCharacter) QueryStrokePrefer() int {
 	ks, us, s, _ := c.QueryStroke()
+	//fmt.Println(ks, us, s)
 	if us > 0 {
 		return us
 	}
@@ -387,9 +388,7 @@ func (c *HanCharacter) QueryTraditional() ([]rune, error) {
 		ts = regexp.MustCompile(`U\+(\w+)`).FindAllStringSubmatch(v, -1)
 		for _, t = range ts {
 			r, _ := strconv.ParseInt(t[1], 16, 32)
-			//if rune(r) != c.Unicode {
 			tsi = append(tsi, rune(r))
-			//}
 		}
 	}
 
@@ -465,9 +464,7 @@ func (c *HanCharacter) QuerySimplified() ([]rune, error) {
 		ts = regexp.MustCompile(`U\+(\w+)`).FindAllStringSubmatch(v, -1)
 		for _, t = range ts {
 			r, _ := strconv.ParseInt(t[1], 16, 32)
-			//if rune(r) != c.Unicode {
 			tsi = append(tsi, rune(r))
-			//}
 		}
 	}
 

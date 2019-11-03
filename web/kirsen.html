@@ -133,6 +133,8 @@
             var given_name_length = $("#given_name_length").val();
             var gender = $("#gender").val();
             var query_nums = $("#query_nums").val();
+            var max_rank = 0;
+            var min_rank = 0;
             var language = $("#language").val();
 
             if (family_name == "") {
@@ -176,6 +178,12 @@
                 $("#character_level").val(default_character_level);
             }
 
+            if (query_nums == -1) {
+                query_nums = 0;
+                min_rank = $("#min_rank").val();
+                max_rank = $("#max_rank").val();
+            }
+
             if (language == "") {
                 language = default_language;
                 $("#language").val(default_language);
@@ -201,13 +209,13 @@
                     "&suffix=" + suffix_name + "&birth=" +
                     birth_timestamp + "&longitude=" + longitude + "&latitude=" + latitude + "&gender=" + gender +
                     "&nums=" + query_nums + "&length=" + given_name_length + "&character_level=" + character_level +
-                    "&lang=" + language;
+                    "&max_rank=" + max_rank + "&min_rank=" + min_rank + "&lang=" + language;
             } else {
                 url = "https://demo.naming.weiapi.net/name/kirsen?family=" + family_name + "&prefix=" + prefix_name +
                     "&suffix=" + suffix_name + "&birth=" +
                     birth_timestamp + "&longitude=" + longitude + "&latitude=" + latitude + "&gender=" + gender +
                     "&nums=" + query_nums + "&length=" + given_name_length + "&character_level=" + character_level +
-                    "&lang=" + language;
+                    "&max_rank=" + max_rank + "&min_rank=" + min_rank + "&lang=" + language;
             }
 
             $.ajax({
@@ -405,13 +413,22 @@
                 data.list = [];
             }
 
-            data.list.forEach(function (e) {
-                if (e) {
-                    name_list += "<tr><td>[" + e.simplified.full_name + "] [" + e.traditional.full_name +
-                        "] - [" + e.pinyin_tone + "]</td><td>" + e.rank + "</td>" +
-                        "<td>" + ((e.is_common == true) ? "是" : "否") + "</td>" +
-                        "<td><a target=\"_blank\" href=\"rank.html?family_name=" + e.traditional.family_name
-                        .string + "&given_name=" + e.traditional.given_name.string + "\">查看</a></td></tr>";
+            $.each(data.list, function (k, v) {
+                if (v) {
+                    name_list += "<tr class=\"table-info\"><td>[" + k + "] - " + v.length +
+                        "</td><td colspan=\"3\"></td></tr>";
+                    v.forEach(function (n) {
+                        if (n) {
+                            name_list += "<tr><td>[" + n.simplified.full_name + "] [" + n
+                                .traditional.full_name +
+                                "] - [" + n.pinyin_tone + "]</td><td>" + n.rank + "</td>" +
+                                "<td>" + ((n.is_common == true) ? "是" : "否") + "</td>" +
+                                "<td><a target=\"_blank\" href=\"rank.html?family_name=" + n
+                                .traditional.family_name
+                                .string + "&given_name=" + n.traditional.given_name.string +
+                                "\">查看</a></td></tr>";
+                        }
+                    });
                 }
             });
 
@@ -474,14 +491,25 @@
                     <option value="0" selected>未知</option>
                 </select>
             </div>
+        </div>
+        <div class="row justify-content-center">
             <div class="col col-sm-2 p-3 form-group">
                 <label for="query_nums">返回名字数量</label>
                 <select class="form-control" id="query_nums">
-                    <option value="0">最高分所有</option>
-                    <option value="100" selected>100</option>
+                    <option value="0 selected">最高分所有</option>
+                    <option value="100">100</option>
                     <option value="200">200</option>
                     <option value="500">500</option>
+                    <option value="-1">分数范围</option>
                 </select>
+            </div>
+            <div class="col col-sm-1 p-3 form-group">
+                <label for="min_rank">最低分数</label>
+                <input type="text" class="form-control" id="min_rank" placeholder="最低分数">
+            </div>
+            <div class="col col-sm-1 p-3 form-group">
+                <label for="max_rank">最高分数</label>
+                <input type="text" class="form-control" id="max_rank" placeholder="最高分数">
             </div>
         </div>
         <div class="row justify-content-center">
@@ -643,7 +671,7 @@
             <div class="col col-sm-8">
                 <label>列表 - 总数：</label>
                 <span id="render_total">0</span>
-                <table class="table">
+                <table class="table table-sm">
                     <thead>
                         <tr>
                             <td class="table-dark">名字</td>

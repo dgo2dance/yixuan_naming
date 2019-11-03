@@ -115,15 +115,20 @@ func (ns *nameSpec) assignUnihan() {
 // assignSpec : Assign properties of name specification (known unihan)
 func (ns *nameSpec) assignSpec() {
 	var (
-		c  *unihan.HanCharacter
-		fe int
+		c      *unihan.HanCharacter
+		fe     int
+		stroke int
 	)
 
 	ns.Runes = nil
 	for _, c = range ns.Characters {
 		if c != nil {
 			ns.Runes = append(ns.Runes, c.Unicode)
-			ns.Strokes = append(ns.Strokes, c.QueryStrokePrefer())
+			stroke = list.QueryStrokeSpecial(c.Unicode)
+			if stroke <= 0 {
+				stroke = c.QueryStrokePrefer()
+			}
+			ns.Strokes = append(ns.Strokes, stroke)
 			fe = list.QueryFiveElement(c.Unicode)
 			ns.FiveElements = append(ns.FiveElements, fe)
 		}
